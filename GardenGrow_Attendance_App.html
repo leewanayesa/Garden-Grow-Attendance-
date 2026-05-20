@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Garden Grow Attendance v30</title>
+<meta name="theme-color" content="#153d29">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GG Attendance">
+<meta name="application-name" content="GG Attendance">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%2296%22%20fill%3D%22%23153d29%22%2F%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M128%20352h256v48H128zm32-192h48v192h-48zm80%2096h48v96h-48zm80-64h48v160h-48z%22%2F%3E%3C%2Fsvg%3E">
+<script>
+(function(){
+  /* ── Generate PNG icon at requested size using Canvas ── */
+  function genPNG(size){
+    try{
+      var c=document.createElement('canvas');c.width=c.height=size;
+      var x=c.getContext('2d');if(!x)return null;
+      var r=size*0.1875;
+      /* Rounded-rect background #153d29 */
+      x.fillStyle='#153d29';
+      x.beginPath();
+      x.moveTo(r,0);x.lineTo(size-r,0);x.arcTo(size,0,size,r,r);
+      x.lineTo(size,size-r);x.arcTo(size,size,size-r,size,r);
+      x.lineTo(r,size);x.arcTo(0,size,0,size-r,r);
+      x.lineTo(0,r);x.arcTo(0,0,r,0,r);
+      x.closePath();x.fill();
+      /* White bar-chart bars */
+      x.fillStyle='#fff';
+      var u=size/16;
+      x.fillRect(u*2.5, u*9,   u*2.2, u*5.5); /* bar 1 */
+      x.fillRect(u*5.9, u*6,   u*2.2, u*8.5); /* bar 2 */
+      x.fillRect(u*9.3, u*7.5, u*2.2, u*7);   /* bar 3 */
+      x.fillRect(u*12.7,u*4.5, u*2.2, u*10);  /* bar 4 */
+      x.fillRect(u*2,   u*14,  u*12,  u*0.6); /* baseline */
+      return c.toDataURL('image/png');
+    }catch(e){return null}
+  }
+  var svg='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%2296%22%20fill%3D%22%23153d29%22%2F%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M128%20352h256v48H128zm32-192h48v192h-48zm80%2096h48v96h-48zm80-64h48v160h-48z%22%2F%3E%3C%2Fsvg%3E';
+  var p192=genPNG(192), p512=genPNG(512);
+  var icons=[];
+  if(p512)icons.push({src:p512,sizes:'512x512',type:'image/png',purpose:'any maskable'});
+  if(p192)icons.push({src:p192,sizes:'192x192',type:'image/png',purpose:'any'});
+  icons.push({src:svg,sizes:'any',type:'image/svg+xml',purpose:'any maskable'});
+  var m={
+    name:'Garden Grow Attendance',short_name:'GG Attendance',
+    description:'Daily attendance, summaries, and annual leave — data stored on this device.',
+    start_url:location.href.split('?')[0],scope:'./',display:'standalone',
+    orientation:'portrait-primary',background_color:'#f3f6f2',theme_color:'#153d29',
+    icons:icons,
+    screenshots:[
+      {label:'Daily Attendance',form_factor:'narrow'},
+      {label:'Monthly Summary',form_factor:'narrow'}
+    ]
+  };
+  try{
+    var bl=new Blob([JSON.stringify(m)],{type:'application/manifest+json'});
+    var lk=document.createElement('link');lk.rel='manifest';lk.href=URL.createObjectURL(bl);
+    document.head.appendChild(lk);
+    /* Apple touch icon — use 192px PNG if available, else SVG */
+    var ati=document.createElement('link');ati.rel='apple-touch-icon';ati.href=p192||svg;
+    document.head.appendChild(ati);
+    /* Store p192 globally so sw.js download can include it */
+    window._ggIcon192=p192;window._ggIcon512=p512;
+  }catch(e){}
+})();
+</script>
+<style>
+/* ── DESIGN TOKENS ─────────────────────────────────────────── */
+:root{
+  --green:#153d29;--green2:#2d6a4f;--bg:#f3f6f2;
+  --line:#dbe2d8;--muted:#667166;--gold:#c9a84c;--red:#b3261e;
+  --soft:#edf5ef;--shadow:0 1px 7px rgba(0,0,0,.08);
+  --hdr-h:30px;
+}
+/* ── BASE ──────────────────────────────────────────────────── */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--bg);color:#17221b;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  font-size:16px;width:100%;max-width:100%;overflow-x:hidden;
+  -webkit-text-size-adjust:100%;touch-action:manipulation;
+}
+html,body{
+  /* Mobile stability: prevent sideways drift and overscroll bounce chains */
+  overscroll-behavior-x:none;
+  overscroll-behavior-y:contain;
+}
+button,input,select,textarea{font-family:inherit;font-size:16px!important}
+input,select,textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;
+  background:#fff;padding:10px;min-height:44px;
+  -webkit-appearance:none;appearance:none;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+button{border:0;border-radius:12px;min-height:44px;font-weight:900;cursor:pointer;user-select:none;background:var(--green2);color:#fff}
+button:active{transform:scale(.97);filter:brightness(.96)}
+textarea{resize:vertical;line-height:1.25}
+.btnSoft{background:var(--soft);color:var(--green)}
+.btnGold{background:var(--gold);color:#17221b}
+.btnRed{background:#fff0f0;color:var(--red)}
+/* ── HEADER ────────────────────────────────────────────────── */
+header{
+  position:sticky;top:0;z-index:50;
+  background:var(--green);color:#fff;
+  padding:2px 8px;min-height:var(--hdr-h);
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+h1{font-size:13px;margin:0;font-weight:950;line-height:1;padding-right:64px}
+.sub{font-size:7.8px;opacity:.88;margin-top:0;line-height:1;padding-right:64px}
+/* ── TABS ──────────────────────────────────────────────────── */
+/* FIX: single sticky top using CSS var — no more competing !important offsets */
+.tabs{
+  position:sticky;top:calc(var(--hdr-h) + env(safe-area-inset-top, 0px));z-index:45;
+  background:#eaf1ea;border-bottom:1px solid #cddccd;padding:2px 6px;
+}
+.tabGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-width:900px;margin:auto}
+.tabGrid button{background:#fff;color:var(--green);font-size:10.5px!important;min-height:24px;padding:1px 2px;border-radius:9px}
+.tabGrid button.active{background:var(--green2);color:#fff}
+/* ── PAGES ─────────────────────────────────────────────────── */
+.page{display:none;padding:3px 8px;max-width:1280px;margin:auto}
+.page.active{display:block}
+/* ── TOP DOCK ──────────────────────────────────────────────── */
+.topDock{display:grid;grid-template-columns:1fr .72fr;gap:4px;margin-bottom:4px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:5px}
+.panel.green{border-left:5px solid var(--green2)}
+.panel.gold{border-left:5px solid var(--gold)}
+.title{font-size:11px;font-weight:950;color:var(--green);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+/* ENHANCEMENT: Today button added to date row */
+.dateRow{display:grid;grid-template-columns:26px 1fr 36px 26px;gap:3px;align-items:center}
+.dateDisplay{background:#fff;color:#111;border:1px solid var(--line);font-size:11.5px!important;font-weight:900;min-height:27px;text-align:center;padding:2px 4px}
+.todayBtn{background:#e9f6ec;color:#1f6b3b;border:1px solid #b6d9c0;font-size:9px!important;min-height:27px;padding:1px 2px;border-radius:8px;font-weight:900}
+.dateRow > button:not(.dateDisplay):not(.todayBtn){min-height:27px;border-radius:9px;padding:2px}
+.defaults{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:4px}
+.field label{display:block;font-size:8.8px;font-weight:900;color:var(--muted);margin-bottom:1px;line-height:1}
+.field input,.field select{font-size:12px!important;min-height:27px;padding:3px 6px;border-radius:9px}
+.mainActions{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.mainActions button{font-size:12px!important;min-height:29px;padding:3px;border-radius:9px}
+.moreToggle{margin-top:5px;width:100%;background:#fff7df;color:#17221b;border:1px solid #e2ca6a;font-size:12px!important;min-height:29px;padding:3px;border-radius:9px}
+.morePanel{display:none;margin-top:5px;grid-template-columns:1fr 1fr;gap:5px}
+.morePanel.open{display:grid}
+.morePanel button{font-size:10.5px!important;min-height:29px;padding:3px;border-radius:9px}
+/* FIX: inline confirm bar replaces alert()/confirm() native dialogs */
+.confirmBar{display:none;background:#fff3e0;border:1px solid #ffb74d;border-radius:9px;padding:7px 9px;margin-top:5px;font-size:12px;font-weight:900;color:#5d2e00;gap:6px;align-items:center;flex-wrap:wrap}
+.confirmBar.show{display:flex}
+.confirmBar span{flex:1;min-width:120px}
+.confirmBar button{min-height:25px;font-size:10.5px!important;padding:2px 8px;border-radius:7px}
+/* ENHANCEMENT: day summary strip above cards */
+.dayStrip{display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:#f0f8f2;border:1px solid #c6dfc8;border-radius:9px;padding:4px 8px;margin-bottom:4px;font-size:11px;font-weight:900}
+.ds-p{color:#1b6b35}.ds-a{color:#b3261e}.ds-h{color:#8a6100}.ds-l{color:#185fa5}.ds-o{color:#555}.ds-ot{color:#4a3900}
+.ds-warn{color:#8a4000;background:#fff3e0;border-radius:5px;padding:1px 5px;font-size:10px}
+.ds-wknd{color:#666;background:#ebebeb;border-radius:5px;padding:1px 5px;font-size:10px}
+/* ENHANCEMENT: compact controls for mobile card visibility */
+.compactBar{display:flex;justify-content:flex-end;gap:6px;margin:0 0 6px}
+.compactBtn{background:#eef5ef;color:#1f4f36;border:1px solid #cde0d2;border-radius:8px;min-height:26px!important;padding:2px 10px!important;font-size:10.5px!important;font-weight:900}
+/* ── EMPLOYEE CARDS ────────────────────────────────────────── */
+.searchRow{display:grid;grid-template-columns:1fr 78px;gap:5px;margin:4px 0 5px}
+.searchRow input{min-height:30px!important;font-size:13px!important;padding:5px 8px!important}
+.searchRow button{min-height:30px!important;font-size:11px!important}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:7px}
+/* ENHANCEMENT: colour-coded left border by attendance status */
+.emp{background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden;transition:border-color .15s}
+.emp.status-P{border-left:4px solid #2d6a4f}
+.emp.status-A{border-left:4px solid #b3261e}
+.emp.status-H{border-left:4px solid #c9a84c}
+.emp.status-L{border-left:4px solid #185fa5}
+.emp.status-O{border-left:4px solid #6b6b6b}
+/* ENHANCEMENT: collapsible cards */
+.emp.collapsed .empBody{display:none}
+.empHead{display:flex;justify-content:space-between;gap:6px;align-items:center;padding:7px 9px;border-bottom:1px solid #edf0ec;cursor:pointer}
+.emp.collapsed .empHead{border-bottom:0}
+.empHeadLeft{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.empAvatar{width:30px;height:30px;border-radius:50%;background:var(--green2);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.empInfo{min-width:0}
+.empName{font-size:13px;font-weight:950;color:var(--green);line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empNo{font-size:10px;color:var(--muted);font-weight:850;margin-top:1px}
+.empHeadRight{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.badge{font-size:10px;font-weight:900;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.badge-saved{background:#edf8ef;color:#1b6b35}
+.badge-new{background:#fff3cd;color:#8a4000}
+/* ENHANCEMENT: status pill visible even when card is collapsed */
+.statusPill{font-size:9.5px;font-weight:900;padding:2px 6px;border-radius:999px;white-space:nowrap}
+.sp-P{background:#edf8ef;color:#1b6b35}.sp-A{background:#ffeaea;color:#b3261e}
+.sp-H{background:#fff8e1;color:#8a6100}.sp-L{background:#e8f0fe;color:#185fa5}
+.sp-O{background:#f0f0f0;color:#555}
+.collapseArrow{font-size:12px;color:var(--muted);transition:transform .2s;flex-shrink:0;line-height:1}
+.emp.collapsed .collapseArrow{transform:rotate(-90deg)}
+.empBody{padding:7px 9px}
+.rowA{display:grid;grid-template-columns:1fr 80px;gap:5px;margin-bottom:5px}
+.rowB{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px}
+.ot input{font-weight:900;text-align:center;border-color:#c9a84c;background:#fffdf2}
+.note textarea{height:38px}
+/* ── SUMMARY ───────────────────────────────────────────────── */
+.bar{background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:10px;margin-bottom:8px}
+.summaryPick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.summaryPick button{background:#e6f3eb;color:var(--green);font-size:13px!important;min-height:32px}
+.summaryPick button.active{background:var(--green2);color:#fff}
+.summaryControl{display:grid;grid-template-columns:40px 1fr 40px;gap:6px;margin:7px 0}
+.summaryControl button{min-height:34px;font-size:13px!important}
+.periodDisplay{background:#fff;color:#111;border:1px solid var(--line);border-radius:11px;font-weight:900;font-size:13px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:6px 0}
+.metric{background:#fff;border:1px solid var(--line);border-radius:11px;text-align:center;padding:5px}
+.metric span{display:block;font-size:10px;color:var(--muted);font-weight:800}
+.metric b{font-size:14px;color:#111}
+.tableWrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{border:1px solid #dbe2d8;padding:4px 5px;text-align:left;line-height:1.1}
+th{background:var(--green);color:#fff}
+table td:first-child{white-space:nowrap;font-size:10.5px;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+table th:first-child{min-width:110px}
+.summaryContent table{table-layout:auto}
+.summaryActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.small{font-size:12px;color:var(--muted)}
+/* ── LEAVE ─────────────────────────────────────────────────── */
+/* Task 3: Leave Timeline — chips showing only months with leave booked */
+.leaveTimeline{margin:8px 0 4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.leaveTimeline .tl-label{font-size:10px;font-weight:900;color:var(--muted);margin-right:2px;white-space:nowrap}
+.tlChip{background:#fff8dc;border:1px solid #e2c84a;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:900;color:#6b4e00;cursor:pointer;white-space:nowrap;transition:background .15s}
+.tlChip:active,.tlChip.active{background:var(--gold);color:#17221b;border-color:#b8940a}
+.tlChip .tlCount{font-size:9px;background:#e2c84a;border-radius:999px;padding:1px 5px;margin-left:4px;color:#5a3d00}
+.tlEmpty{font-size:11px;color:var(--muted);font-style:italic;padding:4px 0}
+/* empNameSelect — looks like a name label but opens full employee list on tap */
+.empNameSelect{
+  font-weight:900;font-size:13px!important;color:var(--green);
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232d6a4f' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+  border:1.5px solid var(--green2);border-radius:10px;
+  padding:6px 32px 6px 12px;cursor:pointer;
+  text-align:left;appearance:none;-webkit-appearance:none;
+}
+.empNameSelect:focus{outline:2px solid var(--green2);outline-offset:1px}
+/* Employee navigator on Leave page */
+.empNav{display:grid;grid-template-columns:36px 1fr 36px;gap:6px;align-items:center;margin-bottom:8px}
+.empNavBtn{min-height:36px!important;font-size:16px!important;padding:2px!important;border-radius:10px!important}
+.leaveFormDates{background:#f7faf7;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px}
+/* Leave form - leaveDates inside leaveFormDates */
+.leaveFormMain{display:none}/* hide old grid, replaced by empNav + leaveFormDates */
+.leaveHistory{margin-top:8px}
+.leaveItem{background:#fff8dc;border:1px solid #ead48a;border-radius:9px;padding:7px;margin-top:5px;font-size:12px}
+.hidden{display:none!important}
+.leaveSearch{margin:0 0 7px!important;grid-template-columns:1fr 68px!important}
+.leaveSearch input{background:#fff!important;border:1px solid var(--green2)!important}
+.leaveSearch button{background:var(--green2)!important;color:#fff!important}
+#dailyPage>.searchRow{display:none}
+.leaveCalControls{display:grid;grid-template-columns:40px 1fr 40px;gap:6px;align-items:center;margin:10px 0 7px}
+.leaveCalControls button{min-height:32px;font-size:13px!important}
+.leaveMonthDisplay{background:#fff;border:1px solid var(--line);border-radius:11px;min-height:32px;display:flex;align-items:center;justify-content:center;font-weight:950;color:var(--green);font-size:13px;cursor:pointer}
+.leaveCalendar{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.leaveCalendar .dow,.leaveCalendar .days{display:grid;grid-template-columns:repeat(7,1fr)}
+.leaveCalendar .dow div{background:var(--green);color:#fff;text-align:center;font-size:10px;font-weight:900;padding:5px 2px}
+.leaveDay{min-height:50px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:3px;background:#fff;font-size:10px;overflow:hidden}
+.leaveDay:nth-child(7n){border-right:0}
+.leaveDay.blank{background:#f7faf7}
+.leaveDay.hasLeave{background:#fff8dc;border-color:#d8bd55}
+/* ENHANCEMENT: weekend shading in leave calendar */
+.leaveDay.weekend{background:#f5f5f0}
+.leaveDay.leaveToday{outline:2px solid #2d6a4f;outline-offset:-2px}
+.leaveDay.leaveToday .leaveDayNum{color:#153d29;font-weight:950}
+.leaveDayNum{font-weight:950;color:#1b2b1f;font-size:11px}
+.leaveDay.weekend .leaveDayNum{color:#aaa}
+.leaveNames{margin-top:1px;color:var(--green);font-weight:800;font-size:9px;line-height:1.1}
+.leaveLegend{font-size:11px;color:var(--muted);margin-top:5px}
+.leaveDates{display:grid;grid-template-columns:1fr 1fr .65fr;gap:8px}
+.dateBtn{background:#fff!important;color:#111!important;border:1px solid var(--line)!important;font-weight:850!important;text-align:center;font-size:11px!important;padding:3px 4px!important;min-height:27px!important;border-radius:9px!important}
+/* ── CALENDAR OVERLAY ──────────────────────────────────────── */
+/* FIX: removed env(safe-area-inset-top) from overlay padding to prevent layout recalc zoom jumps */
+.calendarOverlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.3);display:none;align-items:flex-start;justify-content:center;padding:50px 12px 12px}
+.calendarBox{width:min(400px,96vw);background:#fff;border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:12px;border:1px solid var(--line)}
+.calHead{display:grid;grid-template-columns:40px 1fr 40px 40px;gap:6px;align-items:center;margin-bottom:7px}
+.calHead button{min-height:34px}
+.calTitle{font-weight:950;text-align:center;color:var(--green);font-size:15px}
+.calWeek,.calDays{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.calWeek div{text-align:center;font-size:11px;font-weight:900;color:var(--muted);padding:4px 0}
+.calDays button{min-height:36px;border-radius:9px;background:#f3f7f4;color:#12261b;font-size:12px!important}
+.calDays button.sel{background:var(--green2);color:#fff}
+/* ENHANCEMENT: today highlighted in calendar */
+.calDays button.today-ring{outline:2px solid var(--green2);outline-offset:-2px}
+.calDays button.blank{background:transparent;visibility:hidden}
+/* ENHANCEMENT: weekends in calendar */
+.calDays button.cal-wknd{background:#f3f3ee;color:#aaa}
+.calDays button.cal-wknd.sel{background:var(--green2);color:#fff}
+/* ── RESTORE MODAL ─────────────────────────────────────────── */
+/* ENHANCEMENT: JSON restore from backup */
+.modalOverlay{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.38);display:none;align-items:center;justify-content:center;padding:16px}
+.modalOverlay.show{display:flex}
+.modalBox{background:#fff;border-radius:16px;padding:15px;width:min(380px,96vw);box-shadow:0 8px 32px rgba(0,0,0,.24)}
+.modalTitle{font-size:13px;font-weight:950;color:var(--green);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.modalBox textarea{min-height:100px;font-size:11px!important;font-family:monospace}
+.modalActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+/* ── SHARE NOTICE ──────────────────────────────────────────── */
+.shareNotice{display:none;position:fixed;left:10px;right:10px;bottom:16px;z-index:10000;background:#fff7df;border:1px solid #e2ca6a;border-radius:10px;padding:10px;font-size:12px;color:#17221b;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.shareNotice.show{display:block}
+/* ── RESPONSIVE ────────────────────────────────────────────── */
+@media(max-width:760px){
+  .topDock{grid-template-columns:1fr}
+  .leaveFormMain{grid-template-columns:1fr 1fr}
+  .leaveFormMain .wide{grid-column:1/-1}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .cards{grid-template-columns:1fr}
+  .compactBar{display:flex}
+}
+@media(max-width:420px){
+  :root{--hdr-h:28px}
+  .calendarBox{padding:9px}
+  .calDays button{min-height:32px}
+  .leaveDates{grid-template-columns:1fr 1fr}
+  .leaveDates .daysField{grid-column:1/-1}
+  .summaryControl{grid-template-columns:32px 1fr 32px}
+  .summaryControl button{min-height:30px}
+  .leaveDay{min-height:42px;padding:2px}
+  .leaveNames{font-size:8px}.leaveDayNum{font-size:10px}
+  .dateRow{grid-template-columns:24px 1fr 32px 24px}
+  .morePanel{grid-template-columns:1fr 1fr}
+}
+@media(max-width:360px){
+  .defaults,.rowA,.rowB,.mainActions,.morePanel{grid-template-columns:1fr}
+}
+/* ── DARK MODE ─────────────────────────────────────────────── */
+html.dark{color-scheme:dark}
+html.dark body{background:#0f1a13;color:#d0e8d0}
+html.dark .emp,html.dark .bar,html.dark .panel,html.dark .calendarBox,html.dark .modalBox{background:#182b1e;border-color:#2e4a38}
+html.dark .empHead{border-bottom-color:#2e4a38}
+html.dark input,html.dark select,html.dark textarea{background:#1a2f22;color:#d0e8d0;border-color:#3a5a44}
+html.dark .topDock .panel{background:#182b1e}
+html.dark .tabs{background:#0d1f14;border-bottom-color:#2e4a38}
+html.dark .tabGrid button{background:#1a2f22;color:#7dbf8c}
+html.dark .dayStrip{background:#142019;border-color:#2e4a38}
+html.dark .leaveItem{background:#1e3426;border-color:#3a5a44}
+html.dark .leaveDay{background:#182b1e;border-color:#2a3f30}
+html.dark .leaveDay.blank{background:#121e16}
+html.dark .leaveDay.hasLeave{background:#2a3b1a;border-color:#5a6a30}
+html.dark .leaveDay.weekend{background:#141f18}
+html.dark .calDays button{background:#1a2f22;color:#d0e8d0}
+html.dark .calDays button.cal-wknd{background:#141f18;color:#607060}
+html.dark .moreToggle{background:#1e3020;color:#d0e8d0;border-color:#3a5a44}
+html.dark .morePanel button{background:#1a2f22}
+html.dark .tlChip{background:#2a3b1a;border-color:#5a6a30;color:#c8d890}
+html.dark .compactBtn{background:#1a2f22;color:#7dbf8c;border-color:#2e4a38}
+html.dark .dateDisplay{background:#1a2f22;color:#d0e8d0}
+html.dark .periodDisplay{background:#1a2f22;color:#d0e8d0}
+html.dark .todayBtn{background:#1a3025;color:#7dbf8c;border-color:#2e4a38}
+html.dark .leaveMonthDisplay{background:#1a2f22;color:#7dbf8c;border-color:#2e4a38}
+html.dark .confirmBar{background:#2a1a00;border-color:#7a4a00}
+html.dark .shareNotice{background:#1a2f22;border-color:#3a5a44;color:#d0e8d0}
+html.dark .metric{background:#182b1e;border-color:#2e4a38}
+html.dark .tableWrap{background:#182b1e;border-color:#2e4a38}
+html.dark td{border-color:#2e4a38}
+html.dark .undoBar{background:#1a2a00;border-color:#4a6a00;color:#d0f0a0}
+html.dark .weekendBar{background:#1a1a30;border-color:#4a4a80;color:#c0c0f0}
+html.dark .empMgrItem{border-bottom-color:#2e4a38}
+html.dark .empDefPanel{background:#142019;border-color:#2e4a38}
+html.dark .previewTable th{background:#153d29}
+html.dark .previewTable td{border-color:#2e4a38}
+html.dark .previewTable tr:nth-child(even) td{background:#142019}
+.darkBtn{position:absolute;top:4px;right:8px;background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;min-height:22px!important;padding:1px 7px!important;font-size:10px!important;border-radius:7px;font-weight:700}
+/* ── QUICK STATUS BUTTONS ──────────────────────────────────── */
+.quickStatus{display:flex;gap:3px;flex-shrink:0}
+.qs{min-height:24px!important;padding:1px 5px!important;font-size:9px!important;border-radius:6px!important;font-weight:900;border:1.5px solid transparent}
+.qs-P{background:#edf8ef;color:#1b6b35;border-color:#b6d9c0}.qs-P.qs-on{background:#2d6a4f;color:#fff}
+.qs-A{background:#ffeaea;color:#b3261e;border-color:#f5b8b8}.qs-A.qs-on{background:#b3261e;color:#fff}
+.qs-H{background:#fff8e1;color:#8a6100;border-color:#e8d070}.qs-H.qs-on{background:#c9a84c;color:#fff}
+.qs-L{background:#e8f0fe;color:#185fa5;border-color:#a8c0f0}.qs-L.qs-on{background:#185fa5;color:#fff}
+.qs-O{background:#f0f0f0;color:#555;border-color:#ccc}.qs-O.qs-on{background:#666;color:#fff}
+/* ── UNDO BAR ──────────────────────────────────────────────── */
+.undoBar{display:none;background:#fffde7;border:1px solid #f9c74f;border-radius:9px;padding:6px 10px;margin-top:5px;font-size:12px;font-weight:900;color:#5a3e00;gap:8px;align-items:center}
+.undoBar.show{display:flex}
+/* ── WEEKEND NOTICE ────────────────────────────────────────── */
+.weekendBar{display:none;background:#f0f4ff;border:1px solid #a8b8e0;border-radius:9px;padding:6px 10px;margin-bottom:5px;font-size:12px;font-weight:900;color:#2a3a70;gap:8px;align-items:center;flex-wrap:wrap}
+.weekendBar.show{display:flex}
+/* ── EMPLOYEE MANAGER MODAL ────────────────────────────────── */
+.empMgrList{max-height:260px;overflow-y:auto;margin:8px 0}
+.empMgrItem{display:flex;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)}
+.empMgrItem input{flex:1;min-height:30px!important;font-size:12px!important;padding:4px 8px!important}
+.empMgrItem .empNoTag{font-size:10px;color:var(--muted);font-weight:900;white-space:nowrap;min-width:60px}
+/* ── PAYROLL PREVIEW MODAL ─────────────────────────────────── */
+.previewTable{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+.previewTable th{background:var(--green);color:#fff;padding:5px;text-align:left}
+.previewTable td{border:1px solid var(--line);padding:4px 5px}
+.previewTable tr:nth-child(even) td{background:#f7faf7}
+/* ── GSHEETS MODAL ─────────────────────────────────────────── */
+.gsheetsInfo{font-size:11px;color:var(--muted);line-height:1.6;margin:6px 0}
+/* ── PER-EMP DEFAULTS PANEL ────────────────────────────────── */
+.empDefPanel{background:#f7fef8;border:1px solid #c6dfc8;border-radius:9px;padding:7px;margin-top:6px;font-size:11px}
+.empDefGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:5px}
+.empDefGrid select,.empDefGrid input{font-size:11px!important;min-height:27px;padding:3px 6px;border-radius:8px}
+/* ── AUTO-BACKUP VIEWER ─────────────────────────────────────── */
+.backupItem{display:flex;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}
+.backupItem:last-child{border-bottom:0}
+.bTime{flex:1;font-weight:900;color:var(--green);font-size:11px}
+.bDate{font-size:10px;color:var(--muted);font-weight:700}
+.bSize{font-size:10px;color:var(--muted);white-space:nowrap;margin-right:4px}
+.bBtn{min-height:26px!important;font-size:10px!important;padding:2px 8px!important;border-radius:7px!important;white-space:nowrap;flex-shrink:0}
+.storageSection{background:#f7faf7;border:1px solid #c6dfc8;border-radius:9px;padding:8px;margin-bottom:8px}
+.storageLbl{display:flex;justify-content:space-between;font-size:10px;font-weight:900;color:var(--muted);margin-bottom:4px}
+.storageBarTrack{height:9px;background:#dde8dd;border-radius:5px;overflow:hidden}
+.storageBarFill{height:100%;background:var(--green2);border-radius:5px;transition:width .4s}
+.storageBarFill.warn{background:#c9a84c}
+.storageBarFill.danger{background:#b3261e}
+.lastSavedRow{font-size:9.5px;color:var(--muted);text-align:right;margin-top:3px;font-weight:700;min-height:14px}
+html.dark .storageSection{background:#142019;border-color:#2e4a38}
+html.dark .storageBarTrack{background:#2a3f30}
+html.dark .backupItem{border-bottom-color:#2e4a38}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header style="position:relative">
+  <h1>Garden Grow Attendance</h1>
+  <div class="sub">Landscaping &amp; Gardening LLC • Daily • Summary • Annual Leave</div>
+  <button class="darkBtn" id="darkToggleBtn" onclick="toggleDark()">🌙 Dark</button>
+</header>
+
+<!-- TABS -->
+<nav class="tabs">
+  <div class="tabGrid">
+    <button id="tabDaily"   class="active" onclick="showPage('daily')">📋 Daily</button>
+    <button id="tabSummary"            onclick="showPage('summary')">📊 Summary</button>
+    <button id="tabLeave"              onclick="showPage('leave')">📅 Leave</button>
+  </div>
+</nav>
+
+<!-- ══ DAILY PAGE ════════════════════════════════════════════ -->
+<section id="dailyPage" class="page active">
+  <div class="topDock">
+
+    <div class="panel green">
+      <div class="title">Date &amp; Defaults</div>
+      <!-- FIX + ENHANCEMENT: Today button wired up; 4-column date row -->
+      <div class="dateRow">
+        <button class="btnSoft" onclick="shiftDate(-1)">‹</button>
+        <button class="dateDisplay" id="dateDisplay" onclick="openCalendar('main')">—</button>
+        <button class="todayBtn" onclick="quickToday()">Today</button>
+        <button class="btnSoft" onclick="shiftDate(1)">›</button>
+      </div>
+      <div class="defaults">
+        <div class="field"><label>OT for All</label><input id="defaultOT" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>Default In</label><select id="defaultIn"></select></div>
+        <div class="field"><label>Default Out</label><select id="defaultOut"></select></div>
+      </div>
+      <!-- Task 3: Set as Default button — saves In/Out/OT persistently -->
+      <button class="btnSoft" style="width:100%;margin-top:4px;font-size:10.5px!important;min-height:26px;border-radius:8px;border:1px solid #b6d9c0" onclick="saveDefaults()">💾 Set as Default for Future Dates</button>
+    </div>
+
+    <div class="panel gold">
+      <div class="title">Actions</div>
+      <div class="mainActions">
+        <button class="btnSoft" onclick="applyAll()">Apply All</button>
+        <!-- FIX: saveDay no longer uses alert() -->
+        <button onclick="saveDay(true)">💾 Save</button>
+      </div>
+      <button class="moreToggle" onclick="toggleMore()">More Actions ▾</button>
+      <div id="morePanel" class="morePanel">
+        <button class="btnSoft" onclick="showPage('summary');showSummary('daily')">Daily Summary</button>
+        <button class="btnSoft" onclick="showPage('summary');showSummary('monthly')">Monthly Summary</button>
+        <button class="btnSoft" onclick="showPage('summary');showSummary('weekly')">Weekly Summary</button>
+        <button class="btnSoft" onclick="showPage('leave')">Annual Leave</button>
+        <button class="btnGold" onclick="backup()">Backup JSON</button>
+        <!-- ENHANCEMENT: restore from backup -->
+        <button class="btnGold" onclick="openRestore()">Restore</button>
+        <button class="btnGold" onclick="exportAllExcel()">Excel</button>
+        <button class="btnSoft" onclick="exportPayrollCSV()">Payroll CSV</button>
+        <button class="btnSoft" onclick="promptInstallApp()">📲 Install app</button>
+        <button class="btnSoft" onclick="downloadSwJs()">⚙ Download sw.js</button>
+        <button class="btnSoft" onclick="openEmpMgr()">👥 Employees</button>
+        <button class="btnSoft" onclick="shareWhatsApp()">💬 WhatsApp</button>
+        <button class="btnSoft" onclick="openGSheets()">📊 Google Sheets</button>
+        <button class="btnSoft" onclick="markAllPresentMonth()">✅ All Present Month</button>
+        <button class="btnSoft" onclick="openEmpDefModal()">⏰ Emp Defaults</button>
+        <button class="btnSoft" onclick="openAutoBackups()">🗂 View Backups</button>
+        <button class="btnGold" onclick="downloadBackupNow()">⬇ Download Backup</button>
+      </div>
+      <!-- Last saved timestamp -->
+      <div id="lastSavedDisplay" class="lastSavedRow">—</div>
+      <!-- Undo bar -->
+      <div id="undoBar" class="undoBar">
+        <span id="undoBarLabel" style="flex:1">Last save can be undone</span>
+        <button class="btnRed" style="min-height:25px;font-size:10.5px!important;padding:2px 10px;border-radius:7px" onclick="undoSave()">↩ Undo</button>
+        <button class="btnSoft" style="min-height:25px;font-size:10.5px!important;padding:2px 8px;border-radius:7px" onclick="hideUndoBar()">✕</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Weekend auto Day Off notice -->
+  <div id="weekendBar" class="weekendBar">
+    <span style="flex:1">🌙 Weekend — mark all as Day Off?</span>
+    <button style="min-height:25px;font-size:10.5px!important;padding:2px 10px;border-radius:7px" onclick="applyWeekendDayOff()">Apply Day Off</button>
+    <button class="btnSoft" style="min-height:25px;font-size:10.5px!important;padding:2px 8px;border-radius:7px" onclick="document.getElementById('weekendBar').classList.remove('show')">Dismiss</button>
+  </div>
+
+  <!-- ENHANCEMENT: live day summary strip -->
+  <div id="dayStrip" class="dayStrip">Loading…</div>
+  <div class="compactBar">
+    <button id="cardToggleAllBtn" class="compactBtn" onclick="toggleAllCards()">Expand All</button>
+  </div>
+
+  <div id="cards" class="cards"></div>
+</section>
+
+<!-- ══ SUMMARY PAGE ══════════════════════════════════════════ -->
+<section id="summaryPage" class="page">
+  <div class="bar">
+    <div class="title">Summary</div>
+    <div class="summaryPick">
+      <button id="sumDaily"   onclick="showSummary('daily')">Daily</button>
+      <button id="sumWeekly"  onclick="showSummary('weekly')">Weekly</button>
+      <button id="sumMonthly" onclick="showSummary('monthly')">Monthly</button>
+    </div>
+    <div id="summaryPeriod"></div>
+    <div id="summaryContent"></div>
+    <div class="summaryActions">
+      <button onclick="shareSummaryPdf()">Share PDF</button>
+      <button class="btnGold" onclick="exportAllExcel()">Excel</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══ LEAVE PAGE ════════════════════════════════════════════ -->
+<section id="leavePage" class="page">
+  <div class="bar">
+    <div class="title">Annual Leave / Vacation Plan</div>
+    <!-- Employee navigator: arrows to cycle, tap name area to open full dropdown list -->
+    <div class="empNav">
+      <button class="btnSoft empNavBtn" onclick="leaveEmpShift(-1)">‹</button>
+      <select id="leaveEmp" onchange="renderLeave()" class="empNameSelect"></select>
+      <button class="btnSoft empNavBtn" onclick="leaveEmpShift(1)">›</button>
+    </div>
+    <div class="leaveFormDates">
+      <div class="leaveDates">
+        <div class="field"><label>Start Date</label><button id="leaveStartBtn" class="dateBtn" onclick="openCalendar('leaveStart')">Select</button></div>
+        <div class="field"><label>End Date</label><button id="leaveEndBtn" class="dateBtn" onclick="openCalendar('leaveEnd')">Select</button></div>
+        <div class="field daysField"><label>Days</label><input id="leaveDays" type="number" inputmode="numeric" readonly></div>
+      </div>
+      <div class="field" style="margin-top:6px"><label>Note / Remarks</label><input id="leaveNote" placeholder="Optional note"></div>
+    </div>
+    <button onclick="addLeave()">💾 Save Leave Record</button>
+    <button class="btnGold" style="margin-top:7px;width:100%" onclick="shareLeavePdf()">Share Leave PDF</button>
+
+    <!-- FIX: delete leave uses inline confirm instead of confirm() -->
+    <div id="deleteLeaveConfirm" class="confirmBar">
+      <span>Delete this leave record?</span>
+      <button class="btnRed" onclick="doDeleteLeave()">Yes, Delete</button>
+      <button class="btnSoft" onclick="hideDeleteLeaveConfirm()">Cancel</button>
+    </div>
+
+    <!-- Task 3: Leave Timeline — shows only months with booked leave -->
+    <div id="leaveTimeline" class="leaveTimeline"></div>
+
+    <div class="leaveCalControls">
+      <button class="btnSoft" onclick="shiftLeaveMonth(-1)">‹</button>
+      <div id="leaveMonthDisplay" class="leaveMonthDisplay" onclick="openCalendar('leaveMonth')">Loading…</div>
+      <button class="btnSoft" onclick="shiftLeaveMonth(1)">›</button>
+    </div>
+    <div id="leaveCalendar" class="leaveCalendar"></div>
+    <div class="leaveLegend">🟡 Yellow = leave recorded &nbsp;|&nbsp; Grey = weekend &nbsp;|&nbsp; Tap month to jump</div>
+    <div id="leaveList" style="margin-top:9px"></div>
+  </div>
+</section>
+
+<!-- ══ CALENDAR OVERLAY ══════════════════════════════════════ -->
+<div id="calendarOverlay" class="calendarOverlay" onclick="if(event.target.id==='calendarOverlay')closeCalendar()">
+  <div class="calendarBox">
+    <div class="calHead">
+      <button class="btnSoft" onclick="calShift(-1)">‹</button>
+      <div id="calTitle" class="calTitle">Month</div>
+      <button class="btnSoft" onclick="calShift(1)">›</button>
+      <button class="btnRed" onclick="closeCalendar()">✕</button>
+    </div>
+    <div class="calWeek"><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div></div>
+    <div id="calDays" class="calDays"></div>
+  </div>
+</div>
+
+<!-- ══ RESTORE MODAL ════════════════════════════════════════ -->
+<!-- ENHANCEMENT: import/restore from JSON backup -->
+<div id="restoreModal" class="modalOverlay">
+  <div class="modalBox">
+    <div class="modalTitle">Restore from Backup</div>
+    <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Paste the contents of a GardenGrow backup JSON file. <strong>This replaces all current data.</strong></div>
+    <textarea id="restoreInput" placeholder="Paste backup JSON here…"></textarea>
+    <div class="modalActions">
+      <button style="background:#b3261e;color:#fff" onclick="doRestore()">Restore Data</button>
+      <button class="btnSoft" onclick="closeRestore()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EMPLOYEE MANAGER MODAL ═══════════════════════════════ -->
+<div id="empMgrModal" class="modalOverlay">
+  <div class="modalBox" style="width:min(460px,96vw)">
+    <div class="modalTitle">👥 Employee Manager</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Edit names or add/remove employees. Changes apply immediately.</div>
+    <div id="empMgrList" class="empMgrList"></div>
+    <button class="btnSoft" style="width:100%;margin-top:6px;font-size:11px!important;min-height:32px" onclick="addEmpRow()">+ Add Employee</button>
+    <div class="modalActions" style="margin-top:8px">
+      <button onclick="saveEmpMgr()">💾 Save Changes</button>
+      <button class="btnSoft" onclick="closeEmpMgr()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAYROLL PREVIEW MODAL ════════════════════════════════ -->
+<div id="payrollPreviewModal" class="modalOverlay">
+  <div class="modalBox" style="width:min(520px,96vw)">
+    <div class="modalTitle">📋 Payroll Preview</div>
+    <div id="payrollPreviewContent"></div>
+    <div class="modalActions" style="margin-top:10px">
+      <button onclick="confirmExportPayroll()">⬇ Export CSV</button>
+      <button class="btnSoft" onclick="document.getElementById('payrollPreviewModal').classList.remove('show')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GOOGLE SHEETS MODAL — SIGN IN WITH GOOGLE ═════════════ -->
+<div id="gsheetsModal" class="modalOverlay">
+  <div class="modalBox" style="width:min(480px,96vw);max-height:90vh;overflow-y:auto">
+    <div class="modalTitle">📊 Google Sheets Sync</div>
+
+    <!-- SETUP SECTION (shown first time) -->
+    <div id="gsSetupSection">
+      <div style="font-size:12px;font-weight:900;color:var(--green);margin-bottom:8px">One-time setup — takes about 5 minutes</div>
+
+      <div style="background:#f0f8f2;border:1px solid #c6dfc8;border-radius:9px;padding:10px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:900;margin-bottom:5px">① Host your app on HTTPS (free)</div>
+        <div class="gsheetsInfo">
+          1. Open <strong>netlify.com/drop</strong> on your PC browser<br>
+          2. Drag your <strong>Attendance App v2 ENHANCED</strong> folder into the page<br>
+          3. Wait 10 seconds — you get a free link like:<br>
+          &nbsp;&nbsp;<code style="font-size:10px">https://random-name.netlify.app</code><br>
+          4. Copy that link and paste below 👇
+        </div>
+        <div class="field" style="margin-top:6px">
+          <label style="font-size:10px;font-weight:900;color:var(--muted)">Your Netlify App URL</label>
+          <input id="gsHostUrl" type="url" placeholder="https://your-name.netlify.app">
+        </div>
+      </div>
+
+      <div style="background:#f0f8f2;border:1px solid #c6dfc8;border-radius:9px;padding:10px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:900;margin-bottom:5px">② Get a free Google Client ID</div>
+        <div class="gsheetsInfo">
+          1. Go to <strong>console.cloud.google.com</strong><br>
+          2. Click <strong>"Select a project"</strong> → <strong>"New Project"</strong><br>
+          &nbsp;&nbsp;Name: <strong>GG Attendance</strong> → Create<br>
+          3. Left menu → <strong>APIs &amp; Services → Library</strong><br>
+          &nbsp;&nbsp;Search: <strong>Google Sheets API</strong> → Enable<br>
+          4. Left menu → <strong>Credentials → Create Credentials → OAuth client ID</strong><br>
+          &nbsp;&nbsp;Type: <strong>Web application</strong><br>
+          &nbsp;&nbsp;Under <em>Authorized JavaScript origins</em> → Add your Netlify URL<br>
+          5. Click Create → Copy the <strong>Client ID</strong> → paste below 👇
+        </div>
+        <div class="field" style="margin-top:6px">
+          <label style="font-size:10px;font-weight:900;color:var(--muted)">Google OAuth Client ID</label>
+          <input id="gsClientId" placeholder="xxxx.apps.googleusercontent.com">
+        </div>
+      </div>
+
+      <button style="width:100%" onclick="saveGsSetup()">💾 Save Setup &amp; Continue</button>
+    </div>
+
+    <!-- SYNC SECTION (shown after setup) -->
+    <div id="gsSyncSection" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <div id="gsUserBadge" style="flex:1;font-size:12px;color:var(--muted)">Not signed in</div>
+        <button class="btnRed" style="min-height:24px;font-size:10px!important;padding:2px 8px;border-radius:7px" onclick="gsSignOut()">Sign Out</button>
+        <button class="btnSoft" style="min-height:24px;font-size:10px!important;padding:2px 8px;border-radius:7px" onclick="resetGsSetup()">⚙ Change Setup</button>
+      </div>
+
+      <!-- Google Sign In button -->
+      <button id="gsSignInBtn" onclick="gsSignIn()"
+        style="width:100%;background:#fff;color:#3c4043;border:1.5px solid #dadce0;font-size:14px!important;min-height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+        Sign in with Google
+      </button>
+
+      <!-- Sync button (shown after sign in) -->
+      <button id="gsSyncBtn" onclick="gsDoSync()" style="width:100%;display:none;margin-bottom:8px">🔄 Sync to Google Sheets Now</button>
+
+      <div id="gsSyncStatus" style="font-size:12px;font-weight:900;margin:6px 0;min-height:20px"></div>
+
+      <!-- Open sheet link -->
+      <div id="gsOpenLink" style="display:none;margin-top:4px">
+        <a id="gsSheetHref" href="#" target="_blank"
+           style="font-size:12px;color:var(--green);font-weight:900;text-decoration:none">
+          📄 Open your Google Sheet →
+        </a>
+      </div>
+
+      <div style="margin-top:10px;background:#fffde7;border:1px solid #f9c74f;border-radius:8px;padding:8px;font-size:10.5px;color:#5a3e00">
+        💡 After first sync, your sheet is saved. Next time just tap <strong>Sync</strong> — no need to sign in again unless session expired.
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
+      <button class="btnSoft" style="width:100%" onclick="document.getElementById('gsheetsModal').classList.remove('show')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AUTO-BACKUP VIEWER MODAL ══════════════════════════════ -->
+<div id="autoBackupModal" class="modalOverlay">
+  <div class="modalBox" style="width:min(440px,96vw);max-height:90vh;display:flex;flex-direction:column">
+    <div class="modalTitle">🗂 Auto-Backup History</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Up to 60 automatic save-points are kept on this device. Tap <strong>Restore</strong> to roll back to any point.</div>
+
+    <!-- Storage meter -->
+    <div class="storageSection">
+      <div class="storageLbl">
+        <span>Device Storage Used</span>
+        <span id="storageUsedLabel">Calculating…</span>
+      </div>
+      <div class="storageBarTrack"><div id="storageBarFill" class="storageBarFill" style="width:0%"></div></div>
+      <div style="font-size:9.5px;color:var(--muted);margin-top:3px" id="storageHint"></div>
+    </div>
+
+    <!-- Backup list -->
+    <div id="autoBackupList" style="flex:1;overflow-y:auto;max-height:320px;margin-bottom:8px"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button class="btnGold" onclick="downloadBackupNow()">⬇ Download Backup Now</button>
+      <button class="btnSoft" onclick="document.getElementById('autoBackupModal').classList.remove('show')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PER-EMPLOYEE DEFAULTS MODAL ══════════════════════════ -->
+<div id="empDefModal" class="modalOverlay">
+  <div class="modalBox" style="width:min(400px,96vw)">
+    <div class="modalTitle">⏰ Per-Employee Default Times</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Set individual In/Out/OT defaults. Leave blank to use the global default.</div>
+    <div id="empDefList" style="max-height:320px;overflow-y:auto"></div>
+    <div class="modalActions" style="margin-top:10px">
+      <button onclick="saveEmpDefs()">💾 Save</button>
+      <button class="btnSoft" onclick="document.getElementById('empDefModal').classList.remove('show')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="shareNotice" class="shareNotice"></div>
+
+<script>
+/* ── CONSTANTS ──────────────────────────────────────────────── */
+const STORE='gg_attendance_v15', AUTOBACK='gg_attendance_auto_backups_v2', DEFSTORE='gg_attendance_defaults_v1';
+const EMPSTORE='gg_employees_v1', EMP_DEFS='gg_emp_defaults_v1', DARK_KEY='gg_dark_v1', LAST_EXPORT_KEY='gg_last_export_v1', LAST_BACKUP_DL_KEY='gg_last_backup_dl_v1';
+const DEFAULT_EMPLOYEES=[
+  {no:'EMP-001',name:'TAHIR ALI MOHIB ULLAH'},
+  {no:'EMP-002',name:'RAZ KHAN AZAM SHER'},
+  {no:'EMP-003',name:'AWAIS FEROZ MUHAMMAD'},
+  {no:'EMP-004',name:'SAJID KHAN SHAH RAWAN'},
+  {no:'EMP-005',name:'ZAHID MUHAMMAD NASEER MUHAMMAD'},
+  {no:'EMP-006',name:'AMJAD ALI MUHAMMAD AYUB KHAN'},
+  {no:'EMP-008',name:'JAWAD ALI PIR ZADA'},
+  {no:'EMP-010',name:'GUL BADSHAH HASTAM KHAN'},
+  {no:'EMP-011',name:'JAN SHER GHAFOOR KHAN'},
+  {no:'EMP-012',name:'HAMEED GUL TAJA NOOR'},
+  {no:'EMP-013',name:'IMAM HUSSIAN NISAR UD DIN'},
+  {no:'EMP-014',name:'HAZRAT BILAL MOHIB ULLAH'}
+];
+function loadEmployees(){try{const s=JSON.parse(localStorage.getItem(EMPSTORE));if(s&&s.length)return s}catch(e){}return DEFAULT_EMPLOYEES.map(e=>({...e}))}
+let employees=loadEmployees();
+
+/* ── STATE ──────────────────────────────────────────────────── */
+let db={days:{},leaves:[]}, currentDate=today(), currentSummary='daily',
+    calTarget='main', calMonth=today().slice(0,7),
+    leaveStartVal=today(), leaveEndVal=today(),
+    leaveCalendarMonth=today().slice(0,7),
+    pendingDeleteLeaveIdx=null,
+    allCardsCollapsed=false;
+const _calcSaveTimers={};
+
+/* ── DB ─────────────────────────────────────────────────────── */
+function loadDB(){try{return JSON.parse(localStorage.getItem(STORE))||{days:{},leaves:[]}}catch{return{days:{},leaves:[]}}}
+/* ── UNDO HISTORY (multi-level, up to 10) ───────────────────── */
+let undoHistory=[];
+const UNDO_LIMIT=10;
+
+function saveDB(){
+  /* Push current state to undo history before overwriting */
+  undoHistory.push(JSON.parse(JSON.stringify(db)));
+  if(undoHistory.length>UNDO_LIMIT)undoHistory.shift();
+  localStorage.setItem(STORE,JSON.stringify(db));
+  autoLocalBackup();
+  queueMicrotask(()=>mirrorAllToIDB());
+  flashSaved();
+  showUndoBar();
+  updateLastSavedDisplay(false);
+}
+
+/* Silent auto-save from debounced field changes — no undo snapshot, no undo bar */
+function autoSave(){
+  localStorage.setItem(STORE,JSON.stringify(db));
+  queueMicrotask(()=>mirrorAllToIDB());
+  updateLastSavedDisplay(true);
+}
+
+function autoLocalBackup(){
+  try{
+    /* Key by full ISO timestamp (YYYY-MM-DDTHH:MM) — up to ~6 saves/day, keep 60 entries */
+    const stamp=new Date().toISOString().slice(0,16);
+    let b=JSON.parse(localStorage.getItem(AUTOBACK)||'{}');
+    b[stamp]={data:db,emp:employees.length,days:Object.keys(db.days||{}).length};
+    const keys=Object.keys(b).sort();
+    while(keys.length>60)delete b[keys.shift()];
+    localStorage.setItem(AUTOBACK,JSON.stringify(b));
+  }catch(e){}
+}
+
+/* Last-saved timestamp display */
+function updateLastSavedDisplay(isAuto){
+  const el=document.getElementById('lastSavedDisplay');
+  if(!el)return;
+  const now=new Date();
+  const t=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  el.textContent=(isAuto?'Auto-saved':'Saved')+' at '+t;
+  el.style.color=isAuto?'var(--muted)':'var(--green2)';
+}
+
+/* ── IndexedDB mirror (Android / PWA: extra copy of history on this device) ── */
+const IDB_NAME='gg_attendance_app_v1', IDB_STORE='kv';
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(IDB_NAME,1);
+    r.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(IDB_STORE))e.target.result.createObjectStore(IDB_STORE)};
+    r.onsuccess=()=>res(r.result);
+    r.onerror=()=>rej(r.error);
+  });
+}
+function idbTx(db_,mode,fn){
+  return new Promise((res,rej)=>{
+    try{
+      const tx=db_.transaction(IDB_STORE,mode),st=tx.objectStore(IDB_STORE);
+      const out=fn(st);
+      tx.oncomplete=()=>res(out);
+      tx.onerror=()=>rej(tx.error);
+    }catch(e){rej(e)}
+  });
+}
+async function idbPut(key,val){
+  const d=await idbOpen();
+  try{await idbTx(d,'readwrite',st=>st.put(val,key))}finally{d.close()}
+}
+async function idbGet(key){
+  const d=await idbOpen();
+  try{
+    return await new Promise((res,rej)=>{
+      const tx=d.transaction(IDB_STORE,'readonly'),st=tx.objectStore(IDB_STORE),rq=st.get(key);
+      rq.onsuccess=()=>res(rq.result);
+      rq.onerror=()=>rej(rq.error);
+    });
+  }finally{d.close()}
+}
+async function mirrorAllToIDB(){
+  if(!('indexedDB'in window))return;
+  try{
+    await idbPut(STORE,db);
+    const defs=localStorage.getItem(DEFSTORE);
+    if(defs)await idbPut(DEFSTORE,JSON.parse(defs));
+    const ab=localStorage.getItem(AUTOBACK);
+    if(ab)await idbPut(AUTOBACK,JSON.parse(ab));
+  }catch(e){console.warn('IDB mirror',e)}
+}
+async function hydrateStorage(){
+  if(!('indexedDB'in window)){db=loadDB();return}
+  const rawLS=localStorage.getItem(STORE);
+  let parsed=null;
+  if(rawLS){try{parsed=JSON.parse(rawLS)}catch(e){parsed=null}}
+  const hasLocal=!!(rawLS&&parsed&&typeof parsed==='object'&&Object.prototype.hasOwnProperty.call(parsed,'days'));
+  let idbSnap=null;
+  try{idbSnap=await idbGet(STORE)}catch(e){idbSnap=null}
+  if(!hasLocal&&idbSnap&&typeof idbSnap==='object'&&idbSnap.days){
+    try{localStorage.setItem(STORE,JSON.stringify(idbSnap))}catch(e){}
+  }
+  let defsIdb=null;
+  try{defsIdb=await idbGet(DEFSTORE)}catch(e){defsIdb=null}
+  if(!localStorage.getItem(DEFSTORE)&&defsIdb!=null){
+    try{localStorage.setItem(DEFSTORE,typeof defsIdb==='object'?JSON.stringify(defsIdb):String(defsIdb))}catch(e){}
+  }
+  let abIdb=null;
+  try{abIdb=await idbGet(AUTOBACK)}catch(e){abIdb=null}
+  if(!localStorage.getItem(AUTOBACK)&&abIdb!=null){
+    try{localStorage.setItem(AUTOBACK,typeof abIdb==='object'?JSON.stringify(abIdb):String(abIdb))}catch(e){}
+  }
+  db=loadDB();
+  await mirrorAllToIDB();
+}
+
+/* ── UTILS ──────────────────────────────────────────────────── */
+function today(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}
+function pad(n){return String(n).padStart(2,'0')}
+function monthKey(){return currentDate.slice(0,7)}
+function key(){return currentDate}
+function short(n){return n.split(' ').slice(0,3).join(' ')}
+function initials(n){const p=n.trim().split(/\s+/);return((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase()}
+function val(id){const el=document.getElementById(id);return el?el.value:''}
+function escHTML(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function fmt(t){if(!t)return'';let [h,m]=t.split(':').map(Number),ap=h>=12?'PM':'AM';h=h%12||12;return `${h}:${pad(m)} ${ap}`}
+function humanDate(d){const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
+function monthHuman(m){const [y,mo]=m.split('-').map(Number);return new Date(y,mo-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}
+function cap(s){return s?s[0].toUpperCase()+s.slice(1):''}
+function statusLabel(s){return s==='P'?'Present':s==='A'?'Absent':s==='H'?'Half Day':s==='L'?'Leave':s==='O'?'Day Off':'—'}
+/* ENHANCEMENT: UAE weekend = Friday(5) and Saturday(6) */
+function isWeekend(d){const day=new Date(d+'T12:00:00').getDay();return day===5||day===6}
+function countWorkingDays(start,end){
+  let count=0;
+  const cur=new Date(start+'T12:00:00');
+  const last=new Date(end+'T12:00:00');
+  while(cur<=last){
+    if(!isWeekend(cur.toISOString().slice(0,10)))count++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return Math.max(1,count);
+}
+
+/* Task 3: persistent defaults helpers */
+function loadedDefs(){try{return JSON.parse(localStorage.getItem(DEFSTORE))||{}}catch{return{}}}
+function loadedDefIn(){return loadedDefs().defIn||'07:00'}
+function loadedDefOut(){return loadedDefs().defOut||'17:00'}
+function loadedDefOT(){return loadedDefs().defOT||''}
+function saveDefaults(){
+  const d={defIn:val('defaultIn'),defOut:val('defaultOut'),defOT:val('defaultOT')};
+  localStorage.setItem(DEFSTORE,JSON.stringify(d));
+  queueMicrotask(()=>mirrorAllToIDB());
+  showShareNotice('Defaults saved ✓ — will apply to all future dates');
+}
+
+/* ── FLASH / TOAST ──────────────────────────────────────────── */
+/* savedTop badge removed — flashSaved is now a no-op, toasts handle confirmation */
+function flashSaved(){}
+function showShareNotice(msg){
+  const n=document.getElementById('shareNotice');
+  if(!n)return;n.textContent=msg;n.classList.add('show');
+  clearTimeout(window._sn);window._sn=setTimeout(()=>n.classList.remove('show'),5500);
+}
+
+/* ── INIT ───────────────────────────────────────────────────── */
+function init(){
+  fillTimes();
+  renderLeaveEmpOptions();
+  setDate(currentDate);
+  renderCards();
+  renderLeave();
+  showSummary('daily');
+  /* FIX: gesturestart blocks pinch-zoom on iOS correctly;
+     dblclick prevention now scoped away from form inputs
+     so text inputs still zoom normally on Android */
+  document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
+  document.addEventListener('dblclick',e=>{
+    if(!['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))e.preventDefault();
+  },{passive:false});
+  // Extra mobile guard: block accidental pinch and double-tap zoom in viewers/webviews.
+  // Keep form controls (input/select/textarea/contenteditable) untouched.
+  let lastTapAt=0,lastTapX=0,lastTapY=0;
+  const isFormTarget=t=>!!t&&(
+    t.closest('input,select,textarea,[contenteditable="true"]')||
+    ['INPUT','SELECT','TEXTAREA'].includes(t.tagName)
+  );
+  document.addEventListener('touchstart',e=>{
+    if(e.touches.length>1)e.preventDefault();
+  },{passive:false});
+  document.addEventListener('touchend',e=>{
+    const t=e.changedTouches&&e.changedTouches[0];
+    if(!t||isFormTarget(e.target))return;
+    const now=Date.now();
+    const dt=now-lastTapAt;
+    const dx=Math.abs(t.clientX-lastTapX);
+    const dy=Math.abs(t.clientY-lastTapY);
+    if(dt>0&&dt<320&&dx<24&&dy<24)e.preventDefault();
+    lastTapAt=now;lastTapX=t.clientX;lastTapY=t.clientY;
+  },{passive:false});
+  syncCardToggleBtn();
+  registerAttendancePWA();
+}
+function registerAttendancePWA(){
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault();
+    window._ggA2hs=e;
+  });
+  if(!('serviceWorker'in navigator)||location.protocol==='file:')return;
+  /* Try real sw.js first (needed when hosted on Netlify for proper scope + offline cache).
+     Falls back to blob-URL SW only as a last resort. */
+  navigator.serviceWorker.register('./sw.js',{scope:'./'})
+    .then(()=>{window._ggSwOk=true})
+    .catch(()=>{
+      /* sw.js not found — use inline blob SW (scope limited, but better than nothing) */
+      try{
+        const swCode=`const CACHE='gg-attendance-v3';
+self.addEventListener('install',e=>{self.skipWaiting();});
+self.addEventListener('activate',e=>{e.waitUntil(Promise.all([self.clients.claim(),caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))]))});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();if(r.ok)caches.open(CACHE).then(ca=>ca.put(e.request,c)).catch(()=>{});return r}).catch(()=>caches.match(e.request)));});`;
+        const blob=new Blob([swCode],{type:'application/javascript'});
+        navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+      }catch(e){}
+    });
+}
+
+/* ── DOWNLOAD sw.js — user uploads this alongside the HTML on Netlify ── */
+function downloadSwJs(){
+  const code=`/* Garden Grow Attendance — Service Worker
+   Upload this file as sw.js in the SAME folder as GardenGrow_Attendance_App.html on Netlify.
+   This enables true offline support and proper PWA / APK installation.
+*/
+const CACHE='gg-attendance-v3';
+
+self.addEventListener('install',e=>{
+  self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE).then(c=>
+      c.addAll(['./','./${location.pathname.split('/').pop()||'GardenGrow_Attendance_App.html'}'])
+      .catch(()=>{})
+    )
+  );
+});
+
+self.addEventListener('activate',e=>{
+  e.waitUntil(Promise.all([
+    self.clients.claim(),
+    caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+  ]));
+});
+
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  e.respondWith(
+    fetch(e.request)
+      .then(r=>{
+        if(r.ok){const c=r.clone();caches.open(CACHE).then(ca=>ca.put(e.request,c)).catch(()=>{})}
+        return r;
+      })
+      .catch(()=>caches.match(e.request))
+  );
+});
+`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([code],{type:'application/javascript'}));
+  a.download='sw.js';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+  showShareNotice('✅ sw.js downloaded — upload it alongside the HTML file on Netlify.');
+}
+function promptInstallApp(){
+  const p=window._ggA2hs;
+  if(p&&typeof p.prompt==='function'){
+    p.prompt();
+    if(p.userChoice&&typeof p.userChoice.then==='function')
+      p.userChoice.then(()=>{window._ggA2hs=null}).catch(()=>{window._ggA2hs=null});
+    else window._ggA2hs=null;
+    return;
+  }
+  showShareNotice('Android: open in Chrome → ⋮ → Install app or Add to Home screen. History is stored on this phone (browser storage + a backup copy). Use Backup JSON to copy to another device. For one-tap install + offline, host these files on HTTPS (same folder).');
+}
+function fillTimes(){
+  let opts='';
+  for(let h=0;h<24;h++)for(let m of [0,30]){
+    const v=`${pad(h)}:${pad(m)}`;opts+=`<option value="${v}">${fmt(v)}</option>`;
+  }
+  document.getElementById('defaultIn').innerHTML=opts;
+  document.getElementById('defaultOut').innerHTML=opts;
+  /* Task 3: load saved defaults instead of hardcoded 07:00/17:00 */
+  document.getElementById('defaultIn').value=loadedDefIn();
+  document.getElementById('defaultOut').value=loadedDefOut();
+  document.getElementById('defaultOT').value=loadedDefOT();
+}
+
+/* ── DATE NAV ───────────────────────────────────────────────── */
+function setDate(d){
+  currentDate=d;
+  const wknd=isWeekend(d);
+  const disp=document.getElementById('dateDisplay');
+  disp.textContent=humanDate(d)+(wknd?' 🌙':'');
+  disp.style.color=wknd?'#999':'#111';
+  /* show weekend banner only if day not yet saved */
+  const wb=document.getElementById('weekendBar');
+  if(wb){wb.classList.toggle('show',wknd&&!db.days[d])}
+  renderCards();
+  renderLeave();
+}
+function shiftDate(n){const d=new Date(currentDate+'T12:00:00');d.setDate(d.getDate()+n);setDate(d.toISOString().slice(0,10))}
+/* FIX: quickToday is now wired to the Today button */
+function quickToday(){setDate(today())}
+function shiftSummary(n){
+  if(currentSummary==='monthly'){const d=new Date(currentDate+'T12:00:00');d.setMonth(d.getMonth()+n);setDate(d.toISOString().slice(0,10));}
+  else if(currentSummary==='weekly')shiftDate(n*7);
+  else shiftDate(n);
+  showSummary(currentSummary);
+}
+
+/* ── CALENDAR ───────────────────────────────────────────────── */
+function openCalendar(target){
+  calTarget=target;
+  let base=currentDate;
+  if(target==='leaveStart')base=leaveStartVal;
+  else if(target==='leaveEnd')base=leaveEndVal;
+  else if(target==='leaveMonth')base=leaveCalendarMonth+'-01';
+  calMonth=(base||today()).slice(0,7);
+  renderCalendar();
+  document.getElementById('calendarOverlay').style.display='flex';
+}
+function closeCalendar(){document.getElementById('calendarOverlay').style.display='none'}
+function calShift(n){const [y,m]=calMonth.split('-').map(Number);const d=new Date(y,m-1+n,1);calMonth=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;renderCalendar()}
+function renderCalendar(){
+  document.getElementById('calTitle').textContent=monthHuman(calMonth);
+  const [y,m]=calMonth.split('-').map(Number);
+  const first=new Date(y,m-1,1);
+  const blanks=(first.getDay()+6)%7;
+  const max=new Date(y,m,0).getDate();
+  const todayStr=today();
+  let selected=currentDate;
+  if(calTarget==='leaveStart')selected=leaveStartVal;
+  else if(calTarget==='leaveEnd')selected=leaveEndVal;
+  let html='';
+  for(let i=0;i<blanks;i++)html+='<button class="blank"></button>';
+  for(let d=1;d<=max;d++){
+    const v=`${calMonth}-${pad(d)}`;
+    const wknd=isWeekend(v);
+    const cls=[
+      v===selected?'sel':'',
+      v===todayStr?'today-ring':'',
+      wknd?'cal-wknd':''
+    ].filter(Boolean).join(' ');
+    html+=`<button class="${cls}" onclick="selectCalDate('${v}')">${d}</button>`;
+  }
+  document.getElementById('calDays').innerHTML=html;
+}
+function selectCalDate(d){
+  if(calTarget==='leaveStart'){
+    leaveStartVal=d;if(new Date(leaveEndVal)<new Date(leaveStartVal))leaveEndVal=d;
+    updateLeaveDateButtons();syncLeaveDays();renderLeave();
+  }else if(calTarget==='leaveEnd'){
+    leaveEndVal=d;if(new Date(leaveEndVal)<new Date(leaveStartVal))leaveStartVal=d;
+    updateLeaveDateButtons();syncLeaveDays();renderLeave();
+  }else if(calTarget==='leaveMonth'){
+    leaveCalendarMonth=d.slice(0,7);renderLeaveCalendar();
+  }else{
+    setDate(d);
+    if(document.getElementById('summaryPage').classList.contains('active'))showSummary(currentSummary);
+  }
+  closeCalendar();
+}
+
+/* ── PAGE ROUTING ───────────────────────────────────────────── */
+function showPage(p){
+  ['daily','summary','leave'].forEach(x=>{
+    document.getElementById(x+'Page').classList.toggle('active',x===p);
+    document.getElementById('tab'+cap(x)).classList.toggle('active',x===p);
+  });
+  if(p==='summary')showSummary(currentSummary);
+  if(p==='leave')renderLeave();
+}
+function toggleMore(){document.getElementById('morePanel').classList.toggle('open')}
+
+/* ── DAILY RECORDS ──────────────────────────────────────────── */
+function day(){if(!db.days[key()])db.days[key()]={};return db.days[key()]}
+function rec(no){
+  const st=val('st-'+no),otRaw=val('ot-'+no),ot=otRaw===''?0:+(otRaw||0),inn=val('in-'+no),out=val('out-'+no),note=val('note-'+no);
+  return{status:st,in:inn,out,ot,dayVal:st==='P'?1:st==='H'?0.5:0,note};
+}
+function calc(no){
+  /* validate OT >= 0 */
+  const otEl=document.getElementById('ot-'+no);
+  if(otEl&&+otEl.value<0){otEl.value=0;showShareNotice('⚠ OT hours cannot be negative')}
+  /* validate out > in */
+  const inn=val('in-'+no),out=val('out-'+no);
+  if(inn&&out&&out<inn)showShareNotice('⚠ Out time is before In time for '+no.replace('EMP-','Emp '));
+  /* Update in-memory immediately */
+  if(!db.days[key()])db.days[key()]={};
+  db.days[key()][no]=rec(no);
+  /* Update card DOM immediately — no full re-render */
+  updateCardStatus(no);
+  updateDayStrip();
+  /* Debounced write to storage — 1.5 s after last field change */
+  clearTimeout(_calcSaveTimers[no]);
+  _calcSaveTimers[no]=setTimeout(autoSave,1500);
+}
+
+/* ── UPDATE ONE CARD'S STATUS IN DOM (no full re-render) ───── */
+function updateCardStatus(no){
+  const card=document.getElementById('card-'+no);
+  if(!card)return;
+  const r=(db.days[key()]||{})[no];
+  const st=r?r.status||'P':'P';
+  card.className=card.className.replace(/\bstatus-\w+/g,'').trim()+' status-'+st;
+  card.querySelectorAll('.qs').forEach(b=>b.classList.toggle('qs-on',b.textContent.trim()===st));
+  const right=card.querySelector('.empHeadRight');
+  if(right&&!right.querySelector('.badge-saved')){
+    const badge=document.createElement('span');
+    badge.className='badge badge-saved';badge.textContent='✓';
+    right.insertBefore(badge,right.querySelector('.collapseArrow'));
+  }
+  const sel=document.getElementById('st-'+no);if(sel&&sel.value!==st)sel.value=st;
+}
+function applyAll(){
+  const ot=+(val('defaultOT')||0),inn=val('defaultIn'),out=val('defaultOut');
+  employees.forEach(e=>{day()[e.no]={status:'P',in:inn,out,ot,dayVal:1,note:(day()[e.no]||{}).note||''}});
+  saveDB();renderCards();
+}
+/* FIX: saveDay — removed alert(), uses flashSaved + toast instead */
+function saveDay(show){
+  employees.forEach(e=>{
+    if(document.getElementById('st-'+e.no))day()[e.no]=rec(e.no);
+    else if(!day()[e.no])day()[e.no]={status:'P',in:'07:00',out:'17:00',ot:0,dayVal:1,note:''};
+  });
+  saveDB();
+  if(show)showShareNotice('Day saved successfully ✓');
+}
+/* Task 4: Clear Day removed — no longer needed */
+
+/* ── RENDER CARDS ───────────────────────────────────────────── */
+function renderCards(){
+  const data=day();
+  document.getElementById('cards').innerHTML=employees.map(e=>{
+    const saved=!!data[e.no];
+    /* Task 1: default status = Present. Task 2: no New badge — only show ✓ when saved */
+    const r=data[e.no]||{status:'P',in:loadedDefIn(),out:loadedDefOut(),ot:'',note:''};
+    const st=r.status||'P';
+    const collapseClass=allCardsCollapsed?' collapsed':'';
+    return `<div class="emp status-${st}${collapseClass}" id="card-${e.no}">
+      <div class="empHead" onclick="toggleCard('${e.no}')">
+        <div class="empHeadLeft">
+          <div class="empAvatar">${initials(e.name)}</div>
+          <div class="empInfo">
+            <div class="empName">${escHTML(short(e.name))}</div>
+            <div class="empNo">${escHTML(e.no)}</div>
+          </div>
+        </div>
+        <div class="empHeadRight">
+          <div class="quickStatus" onclick="event.stopPropagation()">
+            ${['P','A','H','L','O'].map(s=>`<button class="qs qs-${s}${st===s?' qs-on':''}" onclick="quickSetStatus('${e.no}','${s}')">${s}</button>`).join('')}
+          </div>
+          ${saved?'<span class="badge badge-saved">✓</span>':''}
+          <span class="collapseArrow">▾</span>
+        </div>
+      </div>
+      <div class="empBody">
+        <div class="rowA">
+          <div class="field"><label>Status</label>
+            <select id="st-${e.no}" onchange="calc('${e.no}')">
+              <option value="P" ${st==='P'?'selected':''}>Present</option>
+              <option value="A" ${st==='A'?'selected':''}>Absent</option>
+              <option value="H" ${st==='H'?'selected':''}>Half Day</option>
+              <option value="L" ${st==='L'?'selected':''}>Leave</option>
+              <option value="O" ${st==='O'?'selected':''}>Day Off</option>
+            </select>
+          </div>
+          <div class="field ot"><label>OT Hours</label>
+            <input id="ot-${e.no}" type="number" inputmode="decimal" value="${r.ot||''}" placeholder="0" oninput="calc('${e.no}')" onchange="calc('${e.no}')">
+          </div>
+        </div>
+        <div class="rowB">
+          <div class="field"><label>In Time</label><select id="in-${e.no}" onchange="calc('${e.no}')">${timeOptions(r.in||loadedDefIn())}</select></div>
+          <div class="field"><label>Out Time</label><select id="out-${e.no}" onchange="calc('${e.no}')">${timeOptions(r.out||loadedDefOut())}</select></div>
+        </div>
+        <div class="field note"><label>Note / Remarks</label>
+          <textarea id="note-${e.no}" oninput="calc('${e.no}')" placeholder="Type note">${escHTML(r.note||'')}</textarea>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateDayStrip();
+  syncCardToggleBtn();
+}
+/* ENHANCEMENT: collapsible cards */
+function toggleCard(no){
+  const el=document.getElementById('card-'+no);
+  if(!el)return;
+  el.classList.toggle('collapsed');
+  syncCollapsedStateFromDOM();
+}
+function mobileCompactDefault(){
+  try{return window.matchMedia&&window.matchMedia('(max-width:760px)').matches}catch{return false}
+}
+function syncCollapsedStateFromDOM(){
+  const els=[...document.querySelectorAll('#cards .emp')];
+  if(!els.length)return;
+  allCardsCollapsed=els.every(c=>c.classList.contains('collapsed'));
+  syncCardToggleBtn();
+}
+function syncCardToggleBtn(){
+  const btn=document.getElementById('cardToggleAllBtn');
+  if(!btn)return;
+  btn.textContent=allCardsCollapsed?'Expand All':'Collapse All';
+}
+function toggleAllCards(){
+  allCardsCollapsed=!allCardsCollapsed;
+  document.querySelectorAll('#cards .emp').forEach(c=>c.classList.toggle('collapsed',allCardsCollapsed));
+  syncCardToggleBtn();
+}
+function timeOptions(sel){
+  let opts='';
+  for(let h=0;h<24;h++)for(let m of [0,30]){const v=`${pad(h)}:${pad(m)}`;opts+=`<option value="${v}" ${v===sel?'selected':''}>${fmt(v)}</option>`}
+  return opts;
+}
+/* ENHANCEMENT: live day summary strip */
+function updateDayStrip(){
+  const data=day();let p=0,a=0,h=0,l=0,o=0,ot=0,unsaved=0;
+  employees.forEach(e=>{
+    const r=data[e.no];
+    if(!r){unsaved++;return}
+    if(r.status==='P')p++;else if(r.status==='A')a++;else if(r.status==='H')h++;else if(r.status==='L')l++;
+    else if(r.status==='O')o++;
+    ot+=+(r.ot||0);
+  });
+  const wknd=isWeekend(currentDate);
+  let html=`<span class="ds-p">✅ ${p} Present</span>`;
+  if(a)html+=`<span class="ds-a">❌ ${a} Absent</span>`;
+  if(h)html+=`<span class="ds-h">⏰ ${h} Half</span>`;
+  if(l)html+=`<span class="ds-l">📅 ${l} Leave</span>`;
+  if(o)html+=`<span class="ds-o">🟦 ${o} Day Off</span>`;
+  if(ot>0)html+=`<span class="ds-ot">OT: ${ot.toFixed(1)}h</span>`;
+  if(unsaved>0)html+=`<span class="ds-warn">⚠ ${unsaved} not yet saved</span>`;
+  if(wknd)html+=`<span class="ds-wknd">Weekend</span>`;
+  document.getElementById('dayStrip').innerHTML=html;
+}
+
+/* ── SUMMARY ────────────────────────────────────────────────── */
+/* Fix: dayRows only includes employees with a real saved record for that date.
+   Employees with no saved entry get status/dayVal=0 so they don't inflate Days count */
+function dayRows(d){
+  const saved=db.days[d]||{};
+  return employees.map(e=>{
+    const r=saved[e.no];
+    return {date:d,empNo:e.no,name:e.name,
+      status:r?r.status:'',in:r?r.in:'',out:r?r.out:'',
+      ot:r?+(r.ot||0):0,dayVal:r?+(r.dayVal||0):0,note:r?r.note||'':''};
+  });
+}
+function monthlySummary(m){
+  const s={};employees.forEach(e=>s[e.no]={empNo:e.no,name:e.name,days:0,ot:0,p:0,h:0,a:0,l:0});
+  Object.keys(db.days).filter(d=>d.startsWith(m)).forEach(d=>employees.forEach(e=>{
+    const r=(db.days[d]||{})[e.no];
+    if(r){s[e.no].days+=+(r.dayVal||0);s[e.no].ot+=+(r.ot||0);
+      if(r.status==='P')s[e.no].p++;if(r.status==='H')s[e.no].h++;
+      if(r.status==='A')s[e.no].a++;if(r.status==='L')s[e.no].l++}
+  }));
+  return Object.values(s);
+}
+function weekDates(d){
+  const base=new Date(d+'T12:00:00'),dn=(base.getDay()+6)%7;
+  const mon=new Date(base);mon.setDate(base.getDate()-dn);
+  return Array.from({length:7},(_,i)=>{const x=new Date(mon);x.setDate(mon.getDate()+i);return x.toISOString().slice(0,10)});
+}
+function weeklySummary(d){
+  const dates=weekDates(d),s={};
+  employees.forEach(e=>s[e.no]={empNo:e.no,name:e.name,days:0,ot:0,p:0,h:0,a:0,l:0});
+  dates.forEach(dt=>employees.forEach(e=>{
+    const r=(db.days[dt]||{})[e.no];
+    if(r){s[e.no].days+=+(r.dayVal||0);s[e.no].ot+=+(r.ot||0);
+      if(r.status==='P')s[e.no].p++;if(r.status==='H')s[e.no].h++;
+      if(r.status==='A')s[e.no].a++;if(r.status==='L')s[e.no].l++}
+  }));
+  return {dates,rows:Object.values(s)};
+}
+function showSummary(type){
+  currentSummary=type;
+  ['Daily','Weekly','Monthly'].forEach(x=>document.getElementById('sum'+x).classList.toggle('active',x.toLowerCase()===type));
+  let label=type==='monthly'?monthHuman(monthKey()):type==='weekly'?`${weekDates(key())[0]} → ${weekDates(key())[6]}`:humanDate(key());
+  document.getElementById('summaryPeriod').innerHTML=`<div class="summaryControl"><button class="btnSoft" onclick="shiftSummary(-1)">‹</button><button class="periodDisplay" onclick="openCalendar('summary')">${label}</button><button class="btnSoft" onclick="shiftSummary(1)">›</button></div>`;
+  let html='';
+  if(type==='daily'){
+    /* Task 1: replaced 'Days' metric with 'Half Day' count — more meaningful */
+    const rows=dayRows(key()),
+          p=rows.filter(r=>r.status==='P').length,
+          h=rows.filter(r=>r.status==='H').length,
+          a=rows.filter(r=>r.status==='A').length,
+          o=rows.filter(r=>r.status==='O').length,
+          ot=rows.reduce((x,r)=>x+(+r.ot||0),0);
+    html=metrics(['✅ Present',p],['❌ Absent',a],['⏰ Half',h],['🟦 Day Off',o])+
+         `<div style="font-size:11px;color:var(--muted);margin:2px 0 4px;text-align:right">⏱ OT total: ${ot.toFixed(1)} hrs</div>`+
+         table(['Employee','Status','In','Out','OT','Note'],rows.map(r=>[short(r.name),r.status,fmt(r.in),fmt(r.out),r.ot||'',r.note||'']));
+  }else if(type==='weekly'){
+    const w=weeklySummary(key()),rows=w.rows,
+          p=rows.reduce((x,r)=>x+r.p,0),
+          h=rows.reduce((x,r)=>x+r.h,0),
+          a=rows.reduce((x,r)=>x+r.a,0),
+          ot=rows.reduce((x,r)=>x+r.ot,0);
+    html=metrics(['✅ Present',p],['❌ Absent',a],['⏰ Half Day',h],['⏱ OT Hrs',ot.toFixed(1)])+table(['Employee','Present','Half','Absent','Leave','OT'],rows.map(r=>[short(r.name),r.p,r.h,r.a,r.l,r.ot.toFixed(1)]));
+  }else{
+    const rows=monthlySummary(monthKey()),
+          p=rows.reduce((x,r)=>x+r.p,0),
+          h=rows.reduce((x,r)=>x+r.h,0),
+          a=rows.reduce((x,r)=>x+r.a,0),
+          ot=rows.reduce((x,r)=>x+r.ot,0);
+    html=metrics(['✅ Present',p],['❌ Absent',a],['⏰ Half Day',h],['⏱ OT Hrs',ot.toFixed(1)])+table(['Employee','Present','Half','Absent','Leave','OT'],rows.map(r=>[short(r.name),r.p,r.h,r.a,r.l,r.ot.toFixed(1)]));
+  }
+  document.getElementById('summaryContent').innerHTML=html;
+}
+function metrics(...arr){return `<div class="metrics">${arr.map(a=>`<div class="metric"><span>${a[0]}</span><b>${a[1]}</b></div>`).join('')}</div>`}
+function table(h,rows){return `<div class="tableWrap"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${escHTML(String(c))}</td>`).join('')}</tr>`).join('')}</table></div>`}
+
+/* ── LEAVE ──────────────────────────────────────────────────── */
+function shiftLeaveMonth(n){
+  const [y,m]=leaveCalendarMonth.split('-').map(Number);
+  const d=new Date(y,m-1+n,1);
+  leaveCalendarMonth=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+  renderLeaveCalendar();
+}
+/* Fix 3: populate all employees in the dropdown — no search typing needed */
+function renderLeaveEmpOptions(q){
+  const sel=document.getElementById('leaveEmp');if(!sel)return;
+  const current=sel.value;
+  sel.innerHTML=employees.map(e=>`<option value="${e.no}">${short(e.name)} — ${e.no}</option>`).join('');
+  if(current&&employees.some(e=>e.no===current))sel.value=current;
+  renderLeave();
+}
+/* Cycle prev/next employee with arrow buttons */
+function leaveEmpShift(n){
+  const sel=document.getElementById('leaveEmp');if(!sel)return;
+  const idx=employees.findIndex(e=>e.no===sel.value);
+  const next=(idx+n+employees.length)%employees.length;
+  sel.value=employees[next].no;
+  renderLeave();
+}
+function renderLeave(){
+  updateLeaveDateButtons();syncLeaveDays();
+  renderLeaveTimeline();  /* Task 3: timeline first so it can set leaveCalendarMonth */
+  renderLeaveCalendar();renderLeaveList();
+}
+
+/* Task 3: build timeline chips — only months that have leave, sorted.
+   Auto-jumps calendar to nearest upcoming/recent leave month on first open */
+function renderLeaveTimeline(){
+  const box=document.getElementById('leaveTimeline');if(!box)return;
+  const leaves=db.leaves||[];
+  if(!leaves.length){
+    box.innerHTML='<span class="tlEmpty">No leave booked yet — use the form above to add leave</span>';
+    return;
+  }
+  /* Collect unique months that have ANY leave, count entries per month */
+  const monthMap={};
+  leaves.forEach(l=>{
+    /* a leave record can span multiple months — add chip for each */
+    let cur=new Date(l.start+'T12:00:00');
+    const end=new Date(l.end+'T12:00:00');
+    while(cur<=end){
+      const mk=`${cur.getFullYear()}-${pad(cur.getMonth()+1)}`;
+      monthMap[mk]=(monthMap[mk]||0)+1;
+      cur.setMonth(cur.getMonth()+1);cur.setDate(1);
+    }
+  });
+  const months=Object.keys(monthMap).sort();
+  const todayM=today().slice(0,7);
+  /* Auto-jump: find nearest upcoming month, else most recent past */
+  const future=months.filter(m=>m>=todayM);
+  const target=future.length?future[0]:months[months.length-1];
+  if(target&&leaveCalendarMonth!==target&&!window._leaveCalManualSet){
+    leaveCalendarMonth=target;
+  }
+  let html='<span class="tl-label">📅 Leave Months:</span>';
+  months.forEach(m=>{
+    const active=m===leaveCalendarMonth?'active':'';
+    const isPast=m<todayM;
+    const label=monthHuman(m).replace(' ','\u00A0');
+    html+=`<button class="tlChip ${active}" onclick="jumpLeaveMonth('${m}')">${isPast?'':'🔜 '}${label}<span class="tlCount">${monthMap[m]}</span></button>`;
+  });
+  box.innerHTML=html;
+}
+function jumpLeaveMonth(m){
+  window._leaveCalManualSet=true;
+  leaveCalendarMonth=m;
+  renderLeaveCalendar();
+  renderLeaveList();
+  renderLeaveTimeline();
+}
+function updateLeaveDateButtons(){
+  const s=document.getElementById('leaveStartBtn'),e=document.getElementById('leaveEndBtn');
+  if(s)s.textContent=humanDate(leaveStartVal);
+  if(e)e.textContent=humanDate(leaveEndVal);
+}
+function syncLeaveDays(){
+  if(leaveStartVal&&leaveEndVal)
+    document.getElementById('leaveDays').value=countWorkingDays(leaveStartVal,leaveEndVal);
+}
+function addLeave(){
+  const emp=val('leaveEmp'),s=leaveStartVal,e=leaveEndVal;
+  const days=countWorkingDays(s,e);
+  if(!db.leaves)db.leaves=[];
+  db.leaves.push({month:s.slice(0,7),empNo:emp,start:s,end:e,days,note:val('leaveNote')});
+  leaveCalendarMonth=s.slice(0,7);
+  window._leaveCalManualSet=true; /* stay on the month we just saved */
+  saveDB();document.getElementById('leaveNote').value='';renderLeave();
+  showShareNotice('Leave record saved ✓');
+}
+/* FIX: deleteLeave uses inline confirm bar — no native confirm() */
+function askDeleteLeave(i){
+  pendingDeleteLeaveIdx=i;
+  const bar=document.getElementById('deleteLeaveConfirm');
+  bar.classList.add('show');
+  bar.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function hideDeleteLeaveConfirm(){document.getElementById('deleteLeaveConfirm').classList.remove('show');pendingDeleteLeaveIdx=null}
+function doDeleteLeave(){
+  if(pendingDeleteLeaveIdx===null)return;
+  db.leaves.splice(pendingDeleteLeaveIdx,1);
+  saveDB();renderLeave();hideDeleteLeaveConfirm();
+}
+function overlapsMonth(l,m){
+  const start=m+'-01',end=m+'-'+pad(new Date(+m.slice(0,4),+m.slice(5,7),0).getDate());
+  return l.start<=end&&l.end>=start;
+}
+function renderLeaveCalendar(){
+  const box=document.getElementById('leaveCalendar');
+  const title=document.getElementById('leaveMonthDisplay');
+  if(!box||!title)return;
+  title.textContent=monthHuman(leaveCalendarMonth);
+  const [y,m]=leaveCalendarMonth.split('-').map(Number);
+  const first=new Date(y,m-1,1);
+  const blanks=(first.getDay()+6)%7;
+  const max=new Date(y,m,0).getDate();
+  const leaves=(db.leaves||[]).filter(l=>overlapsMonth(l,leaveCalendarMonth));
+  let html='<div class="dow"><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div></div><div class="days">';
+  for(let i=0;i<blanks;i++)html+='<div class="leaveDay blank"></div>';
+  for(let d=1;d<=max;d++){
+    const date=`${leaveCalendarMonth}-${pad(d)}`;
+    const isToday=date===today();
+    const names=leaves.filter(l=>date>=l.start&&date<=l.end).map(l=>{const e=employees.find(x=>x.no===l.empNo)||{name:l.empNo};return escHTML(short(e.name))});
+    /* ENHANCEMENT: weekend shading in leave calendar */
+    const wknd=isWeekend(date);
+    html+=`<div class="leaveDay ${names.length?'hasLeave':''} ${wknd?'weekend':''} ${isToday?'leaveToday':''}">
+      <div class="leaveDayNum">${d}</div>
+      ${names.length?`<div class="leaveNames">${names.slice(0,2).join('<br>')}${names.length>2?'<br>+'+(names.length-2)+' more':''}</div>`:''}
+    </div>`;
+  }
+  html+='</div>';box.innerHTML=html;
+}
+/* ENHANCEMENT: leave records list with delete buttons */
+function renderLeaveList(){
+  const box=document.getElementById('leaveList');if(!box)return;
+  const leaves=(db.leaves||[]).filter(l=>overlapsMonth(l,leaveCalendarMonth));
+  if(!leaves.length){box.innerHTML='<div class="small" style="margin-top:6px;color:var(--muted)">No leave records for this month.</div>';return}
+  box.innerHTML='<div class="title" style="margin-top:8px;margin-bottom:4px">This Month\'s Records</div>'+
+    leaves.map(l=>{
+      const realIdx=(db.leaves||[]).indexOf(l);
+      const e=employees.find(x=>x.no===l.empNo)||{name:l.empNo,no:l.empNo};
+      return `<div class="leaveItem" style="display:flex;gap:8px;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1;min-width:0">
+          <strong>${escHTML(short(e.name))}</strong> <span style="color:var(--muted);font-size:10px">${escHTML(e.no)}</span><br>
+          <span style="font-size:11px">${humanDate(l.start)} → ${humanDate(l.end)} • <strong>${l.days}</strong> day(s)${l.note?' • '+escHTML(l.note):''}</span>
+        </div>
+        <button class="btnRed" style="min-height:24px;font-size:10px!important;padding:2px 8px;border-radius:7px;flex-shrink:0" onclick="askDeleteLeave(${realIdx})">Delete</button>
+      </div>`;
+    }).join('');
+}
+
+/* ── RESTORE (ENHANCEMENT) ──────────────────────────────────── */
+function openRestore(){document.getElementById('restoreModal').classList.add('show')}
+function closeRestore(){document.getElementById('restoreModal').classList.remove('show');document.getElementById('restoreInput').value=''}
+function doRestore(){
+  const raw=document.getElementById('restoreInput').value.trim();
+  if(!raw){showShareNotice('Please paste a backup JSON first.');return}
+  try{
+    const parsed=JSON.parse(raw);
+    /* Support new format: {exportedAt, version, employees, data:{days,leaves}} */
+    /* AND old format: {days:{...}, leaves:[...]} */
+    let restoredDb, restoredEmp=null;
+    if(parsed.data&&typeof parsed.data.days==='object'){
+      restoredDb=parsed.data;
+      if(Array.isArray(parsed.employees)&&parsed.employees.length)restoredEmp=parsed.employees;
+    }else if(typeof parsed.days==='object'){
+      restoredDb=parsed;
+    }else{
+      showShareNotice('Invalid backup — could not find attendance data.');return;
+    }
+    db=restoredDb;if(!db.leaves)db.leaves=[];
+    if(restoredEmp){
+      employees=restoredEmp;
+      localStorage.setItem(EMPSTORE,JSON.stringify(employees));
+    }
+    localStorage.setItem(STORE,JSON.stringify(db));
+    queueMicrotask(()=>mirrorAllToIDB());
+    autoLocalBackup(); /* snapshot this restore as a backup point */
+    closeRestore();
+    renderLeaveEmpOptions();renderCards();renderLeave();showSummary(currentSummary);
+    showShareNotice('✅ Data restored successfully'+(restoredEmp?' (employees also restored)':''));
+  }catch(e){showShareNotice('Could not parse JSON. Make sure you pasted the full backup file.')}
+}
+
+/* ── SHARE / EXPORT ─────────────────────────────────────────── */
+async function shareFile(name,content,type){
+  try{
+    const file=new File([content],name,{type});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return true}
+  }catch(e){showShareNotice('Sharing blocked. In Documents app: turn off "Block external links in HTML viewer".')}
+  showShareNotice('Sharing blocked by viewer. In Documents app settings, disable "Block external links in HTML viewer".');
+  return false;
+}
+async function backup(){
+  saveDay(false);
+  const payload=JSON.stringify({exportedAt:new Date().toISOString(),version:'v30',employees,data:db},null,2);
+  await shareFile(`GardenGrow_Backup_${today()}.json`,payload,'application/json');
+  localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());
+}
+function csvEsc(v){return `"${String(v??'').replace(/"/g,'""')}"`}
+function xlsEsc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+async function exportAllExcel(){
+  saveDay(false);const dates=Object.keys(db.days).sort();
+  let html='<html><head><meta charset="UTF-8"></head><body><h2>Garden Grow Attendance</h2><h3>Daily Attendance</h3><table border="1"><tr><th>Date</th><th>Month</th><th>Employee No</th><th>Employee Name</th><th>Status</th><th>In</th><th>Out</th><th>OT</th><th>Day Value</th><th>Note</th></tr>';
+  dates.forEach(d=>employees.forEach(e=>{const r=(db.days[d]||{})[e.no];if(r)html+=`<tr><td>${d}</td><td>${d.slice(0,7)}</td><td>${e.no}</td><td>${xlsEsc(e.name)}</td><td>${r.status}</td><td>${r.in||''}</td><td>${r.out||''}</td><td>${r.ot||0}</td><td>${r.dayVal||0}</td><td>${xlsEsc(r.note||'')}</td></tr>`}));
+  html+='</table><h3>Monthly Payroll Summary</h3><table border="1"><tr><th>Month</th><th>Employee No</th><th>Employee Name</th><th>Days</th><th>OT</th><th>Present</th><th>Half</th><th>Absent</th><th>Leave</th></tr>';
+  [...new Set(dates.map(d=>d.slice(0,7)))].sort().forEach(m=>monthlySummary(m).forEach(r=>html+=`<tr><td>${m}</td><td>${r.empNo}</td><td>${xlsEsc(r.name)}</td><td>${r.days}</td><td>${r.ot.toFixed(2)}</td><td>${r.p}</td><td>${r.h}</td><td>${r.a}</td><td>${r.l}</td></tr>`));
+  html+='</table><h3>Annual Leave</h3><table border="1"><tr><th>Month</th><th>Employee No</th><th>Employee Name</th><th>Start</th><th>End</th><th>Days</th><th>Note</th></tr>';
+  (db.leaves||[]).forEach(l=>{const e=employees.find(x=>x.no===l.empNo)||{name:l.empNo,no:l.empNo};html+=`<tr><td>${l.month}</td><td>${e.no}</td><td>${xlsEsc(e.name)}</td><td>${l.start}</td><td>${l.end}</td><td>${l.days}</td><td>${xlsEsc(l.note||'')}</td></tr>`});
+  html+='</table></body></html>';
+  await shareFile(`GardenGrow_All_${today()}.xls`,html,'application/vnd.ms-excel');
+}
+
+/* ── PDF ────────────────────────────────────────────────────── */
+function pdfEsc(s){return String(s??'').replace(/\\/g,'\\\\').replace(/[\r\n\t\x00-\x1F\x7F]/g,' ').replace(/\(/g,'\\(').replace(/\)/g,'\\)')}
+function pdfText(s,size,x,y,bold=false){return `BT /F${bold?2:1} ${size} Tf ${x} ${y} Td (${pdfEsc(s)}) Tj ET\n`}
+function pdfRect(x,y,w,h,fill=false){return `${x} ${y} ${w} ${h} re ${fill?'f':'S'}\n`}
+function makePdf(title,headers,rows){
+  const pageW=842,pageH=595,margin=28;let y=pageH-30,content='';
+  const add=t=>{content+=t};
+  add('0.08 0.24 0.16 rg\n'+pdfRect(0,pageH-58,pageW,58,true));
+  add('1 1 1 rg\n'+pdfText('Garden Grow Landscaping & Gardening LLC',15,margin,pageH-32,true)+pdfText(title,9.5,margin,pageH-48,false));
+  add('0.93 0.98 0.94 rg\n'+pdfRect(pageW-138,pageH-47,108,26,true));
+  add('0.08 0.24 0.16 rg\n'+pdfText(new Date().toLocaleDateString(),8.5,pageW-124,pageH-36,true));
+  y=pageH-82;
+  const firstW=headers[0]==='Employee'?190:120;
+  const widths=headers.map((h,i)=>i===0?firstW:Math.floor((pageW-margin*2-firstW)/(headers.length-1)));
+  const total=widths.reduce((a,b)=>a+b,0);
+  function row(vals,head=false,alt=false){
+    let h=head?22:20;if(y-h<30)return false;
+    add((head?'0.08 0.24 0.16 rg\n':alt?'0.965 0.98 0.965 rg\n':'1 1 1 rg\n')+pdfRect(margin,y-h,total,h,true));
+    add('0.72 0.78 0.72 RG 0.6 w\n');
+    let x=margin;
+    for(let i=0;i<vals.length;i++){
+      add(pdfRect(x,y-h,widths[i],h,false));
+      add((head?'1 1 1 rg\n':'0.04 0.06 0.04 rg\n')+pdfText(String(vals[i]??'').slice(0,i===0?30:18),head?8:7.2,x+4,y-(head?14:13),head));
+      x+=widths[i];
+    }
+    y-=h;return true;
+  }
+  row(headers,true);rows.forEach((r,i)=>row(r,false,i%2===1));
+  if(!rows.length){add('0.04 0.06 0.04 rg\n'+pdfText('No records found for this period.',10,margin,y-18,false));}
+  /* FIX: use byte length for PDF stream /Length, not JS string length */
+  const byteLen=(new TextEncoder()).encode(content).length;
+  const objs=[
+    `<< /Type /Catalog /Pages 2 0 R >>`,
+    `<< /Type /Pages /Kids [3 0 R] /Count 1 >>`,
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>`,
+    `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`,
+    `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>`,
+    `<< /Length ${byteLen} >>\nstream\n${content}\nendstream`
+  ];
+  const enc=new TextEncoder();
+  let pdfParts=['%PDF-1.4\n'];
+  let byteOffset=enc.encode(pdfParts[0]).length;
+  const offs=[0];
+  objs.forEach((o,i)=>{
+    const chunk=`${i+1} 0 obj\n${o}\nendobj\n`;
+    offs.push(byteOffset);
+    byteOffset+=enc.encode(chunk).length;
+    pdfParts.push(chunk);
+  });
+  const xref=byteOffset;
+  const xrefBody=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`
+    +offs.slice(1).map(n=>String(n).padStart(10,'0')+' 00000 n \n').join('')
+    +`trailer << /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  return pdfParts.join('')+xrefBody;
+}
+async function shareSummaryPdf(){
+  saveDay(false);
+  if(currentSummary==='daily')
+    await shareFile(`GardenGrow_Daily_${key()}.pdf`,makePdf(`Daily Attendance - ${key()}`,['Employee','Status','In','Out','OT','Note'],dayRows(key()).map(r=>[short(r.name),r.status,fmt(r.in),fmt(r.out),r.ot||0,r.note||''])),'application/pdf');
+  else if(currentSummary==='weekly'){
+    const w=weeklySummary(key());
+    await shareFile(`GardenGrow_Weekly_${w.dates[0]}_${w.dates[6]}.pdf`,makePdf(`Weekly Summary - ${w.dates[0]} to ${w.dates[6]}`,['Employee','Days','OT','Present','Half','Absent','Leave'],w.rows.map(r=>[short(r.name),r.days,r.ot.toFixed(1),r.p,r.h,r.a,r.l])),'application/pdf');
+  }else{
+    await shareFile(`GardenGrow_Monthly_${monthKey()}.pdf`,makePdf(`Monthly Summary - ${monthKey()}`,['Employee','Days','OT','Present','Half','Absent','Leave'],monthlySummary(monthKey()).map(r=>[short(r.name),r.days,r.ot.toFixed(1),r.p,r.h,r.a,r.l])),'application/pdf');
+  }
+}
+async function shareLeavePdf(){
+  const period=leaveCalendarMonth||today().slice(0,7);
+  const rows=(db.leaves||[]).filter(l=>overlapsMonth(l,period)).map(l=>{
+    const e=employees.find(x=>x.no===l.empNo)||{name:l.empNo};
+    return [short(e.name),l.start,l.end,l.days,l.note||''];
+  });
+  await shareFile(`GardenGrow_Leave_${period}.pdf`,makePdf(`Annual Leave - ${monthHuman(period)}`,['Employee','Start','End','Days','Note'],rows),'application/pdf');
+  renderLeaveCalendar();
+}
+
+/* ── DARK MODE ──────────────────────────────────────────────── */
+function initDark(){
+  const on=localStorage.getItem(DARK_KEY)==='1';
+  document.documentElement.classList.toggle('dark',on);
+  const btn=document.getElementById('darkToggleBtn');
+  if(btn)btn.textContent=on?'☀ Light':'🌙 Dark';
+}
+function toggleDark(){
+  const on=document.documentElement.classList.toggle('dark');
+  localStorage.setItem(DARK_KEY,on?'1':'0');
+  const btn=document.getElementById('darkToggleBtn');
+  if(btn)btn.textContent=on?'☀ Light':'🌙 Dark';
+}
+
+/* ── UNDO (multi-level, up to 10) ───────────────────────────── */
+function showUndoBar(){
+  const b=document.getElementById('undoBar');if(!b)return;
+  const count=undoHistory.length;
+  const lbl=document.getElementById('undoBarLabel');
+  if(lbl)lbl.textContent=count>1?`${count} saves can be undone`:'Last save can be undone';
+  b.classList.add('show');
+  clearTimeout(window._undoT);
+  window._undoT=setTimeout(()=>b.classList.remove('show'),20000);
+}
+function hideUndoBar(){
+  const b=document.getElementById('undoBar');if(b)b.classList.remove('show');
+  clearTimeout(window._undoT);
+}
+function undoSave(){
+  if(!undoHistory.length){showShareNotice('Nothing to undo');return}
+  db=undoHistory.pop();
+  localStorage.setItem(STORE,JSON.stringify(db));
+  queueMicrotask(()=>mirrorAllToIDB());
+  renderCards();renderLeave();showSummary(currentSummary);
+  const remaining=undoHistory.length;
+  if(remaining>0)showUndoBar();
+  else hideUndoBar();
+  showShareNotice(`↩ Undo successful ✓${remaining>0?' ('+remaining+' more undo'+(remaining>1?'s':'')+' available)':''}`);
+}
+
+/* ── QUICK STATUS (one-tap from card header) ────────────────── */
+function quickSetStatus(no,status){
+  if(!db.days[key()])db.days[key()]={};
+  const existing=db.days[key()][no]||{in:loadedDefIn(),out:loadedDefOut(),ot:0,note:''};
+  db.days[key()][no]={...existing,status,dayVal:status==='P'?1:status==='H'?0.5:0};
+  saveDB(); /* quick-status taps are explicit saves — they get undo entries */
+  updateCardStatus(no);
+  updateDayStrip();
+}
+
+/* ── WEEKEND AUTO DAY OFF ───────────────────────────────────── */
+function applyWeekendDayOff(){
+  employees.forEach(e=>{
+    if(!db.days[key()])db.days[key()]={};
+    const existing=db.days[key()][e.no]||{in:loadedDefIn(),out:loadedDefOut(),ot:0,note:''};
+    db.days[key()][e.no]={...existing,status:'O',dayVal:0};
+  });
+  saveDB();renderCards();
+  document.getElementById('weekendBar').classList.remove('show');
+  showShareNotice('Weekend: all employees marked Day Off ✓');
+}
+
+/* ── MARK ALL PRESENT FOR WHOLE MONTH ──────────────────────── */
+function markAllPresentMonth(){
+  const m=monthKey();
+  const [y,mo]=m.split('-').map(Number);
+  const daysInMonth=new Date(y,mo,0).getDate();
+  let count=0;
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${m}-${pad(d)}`;
+    if(isWeekend(dateStr))continue;
+    if(!db.days[dateStr])db.days[dateStr]={};
+    employees.forEach(e=>{
+      if(!db.days[dateStr][e.no]){
+        db.days[dateStr][e.no]={status:'P',in:getEmpDef(e.no,'in'),out:getEmpDef(e.no,'out'),ot:0,dayVal:1,note:''};
+        count++;
+      }
+    });
+  }
+  saveDB();renderCards();showSummary(currentSummary);
+  showShareNotice(`✅ ${count} records set to Present for ${monthHuman(m)} (skipped weekends & existing records)`);
+}
+
+/* ── PER-EMPLOYEE DEFAULTS ──────────────────────────────────── */
+function loadEmpDefs(){try{return JSON.parse(localStorage.getItem(EMP_DEFS))||{}}catch{return{}}}
+function getEmpDef(no,field){
+  const d=loadEmpDefs()[no]||{};
+  if(field==='in')return d.in||loadedDefIn();
+  if(field==='out')return d.out||loadedDefOut();
+  if(field==='ot')return d.ot!==undefined?d.ot:loadedDefOT();
+  return '';
+}
+function openEmpDefModal(){
+  const defs=loadEmpDefs();
+  let html='';
+  employees.forEach(e=>{
+    const d=defs[e.no]||{};
+    html+=`<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line)">
+      <div style="font-size:11px;font-weight:900;color:var(--green);margin-bottom:4px">${short(e.name)} <span style="color:var(--muted);font-weight:700">${e.no}</span></div>
+      <div class="empDefGrid">
+        <div class="field"><label>In</label><select id="epd-in-${e.no}">${timeOptions(d.in||loadedDefIn())}</select></div>
+        <div class="field"><label>Out</label><select id="epd-out-${e.no}">${timeOptions(d.out||loadedDefOut())}</select></div>
+        <div class="field"><label>OT</label><input id="epd-ot-${e.no}" type="number" inputmode="decimal" value="${d.ot||''}" placeholder="0" style="min-height:27px;padding:3px 6px;border-radius:8px"></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('empDefList').innerHTML=html;
+  document.getElementById('empDefModal').classList.add('show');
+}
+function saveEmpDefs(){
+  const defs={};
+  employees.forEach(e=>{
+    defs[e.no]={in:val('epd-in-'+e.no),out:val('epd-out-'+e.no),ot:val('epd-ot-'+e.no)};
+  });
+  localStorage.setItem(EMP_DEFS,JSON.stringify(defs));
+  document.getElementById('empDefModal').classList.remove('show');
+  showShareNotice('Per-employee defaults saved ✓');
+}
+
+/* ── EMPLOYEE MANAGER ───────────────────────────────────────── */
+function openEmpMgr(){
+  renderEmpMgrList();
+  document.getElementById('empMgrModal').classList.add('show');
+}
+function closeEmpMgr(){document.getElementById('empMgrModal').classList.remove('show')}
+function renderEmpMgrList(){
+  const box=document.getElementById('empMgrList');if(!box)return;
+  box.innerHTML=employees.map((e,i)=>`
+    <div class="empMgrItem">
+      <span class="empNoTag">${escHTML(e.no)}</span>
+      <input id="emgr-name-${i}" value="${escHTML(e.name)}" placeholder="Employee name">
+      <button class="btnRed" style="min-height:28px;font-size:10px!important;padding:2px 8px;border-radius:7px;flex-shrink:0" onclick="removeEmpRow(${i})">✕</button>
+    </div>`).join('');
+}
+function addEmpRow(){
+  /* generate next EMP number */
+  const nums=employees.map(e=>parseInt(e.no.replace('EMP-',''))||0);
+  const next=Math.max(0,...nums)+1;
+  employees.push({no:`EMP-${String(next).padStart(3,'0')}`,name:''});
+  renderEmpMgrList();
+}
+function removeEmpRow(i){
+  if(employees.length<=1){showShareNotice('Must keep at least one employee');return}
+  employees.splice(i,1);renderEmpMgrList();
+}
+function saveEmpMgr(){
+  employees.forEach((e,i)=>{
+    const inp=document.getElementById('emgr-name-'+i);
+    if(inp)e.name=inp.value.trim().toUpperCase()||e.name;
+  });
+  localStorage.setItem(EMPSTORE,JSON.stringify(employees));
+  closeEmpMgr();
+  renderLeaveEmpOptions();renderCards();
+  showShareNotice('Employee list saved ✓');
+}
+
+/* ── WHATSAPP SHARE ─────────────────────────────────────────── */
+function shareWhatsApp(){
+  const data=day();let p=0,a=0,h=0,l=0,o=0,ot=0;
+  employees.forEach(e=>{const r=data[e.no];if(!r)return;
+    if(r.status==='P')p++;else if(r.status==='A')a++;else if(r.status==='H')h++;
+    else if(r.status==='L')l++;else if(r.status==='O')o++;
+    ot+=+(r.ot||0);
+  });
+  const absentNames=employees.filter(e=>(data[e.no]||{}).status==='A').map(e=>short(e.name)).join(', ');
+  let msg=`*Garden Grow Attendance*\n${humanDate(currentDate)}\n\n`;
+  msg+=`✅ Present: ${p}\n❌ Absent: ${a}\n⏰ Half Day: ${h}\n📅 Leave: ${l}\n🟦 Day Off: ${o}`;
+  if(ot>0)msg+=`\n⏱ OT: ${ot.toFixed(1)} hrs`;
+  if(absentNames)msg+=`\n\n*Absent:* ${absentNames}`;
+  msg+=`\n\n_Garden Grow Landscaping & Gardening LLC_`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+/* ── PAYROLL PREVIEW & EXPORT ───────────────────────────────── */
+function exportPayrollCSV(){
+  saveDay(false);
+  const m=monthKey();
+  const rows=monthlySummary(m);
+  let html=`<div style="font-size:11px;color:var(--muted);margin-bottom:4px">Month: <strong>${monthHuman(m)}</strong></div>`;
+  html+=`<div style="overflow:auto"><table class="previewTable"><thead><tr><th>Employee</th><th>Days</th><th>OT hrs</th><th>Present</th><th>Half</th><th>Absent</th><th>Leave</th></tr></thead><tbody>`;
+  rows.forEach(r=>{html+=`<tr><td>${short(r.name)}</td><td>${r.days}</td><td>${r.ot.toFixed(1)}</td><td>${r.p}</td><td>${r.h}</td><td>${r.a}</td><td>${r.l}</td></tr>`});
+  html+=`</tbody></table></div>`;
+  document.getElementById('payrollPreviewContent').innerHTML=html;
+  document.getElementById('payrollPreviewModal').classList.add('show');
+}
+async function confirmExportPayroll(){
+  document.getElementById('payrollPreviewModal').classList.remove('show');
+  const m=monthKey();
+  const csv=[['Month','Employee No','Employee Name','Days Worked','OT Hours','Present','Half','Absent','Leave'],
+    ...monthlySummary(m).map(r=>[m,r.empNo,r.name,r.days,r.ot.toFixed(2),r.p,r.h,r.a,r.l])]
+    .map(r=>r.map(csvEsc).join(',')).join('\n');
+  localStorage.setItem(LAST_EXPORT_KEY,today());
+  await shareFile(`GardenGrow_Payroll_${m}.csv`,csv,'text/csv');
+}
+
+/* ── MONTHLY EXPORT REMINDER ────────────────────────────────── */
+function checkExportReminder(){
+  const last=localStorage.getItem(LAST_EXPORT_KEY)||'';
+  const now=new Date();
+  /* Correctly compute previous calendar month (handles January correctly) */
+  const prevD=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const prevMonth=`${prevD.getFullYear()}-${pad(prevD.getMonth()+1)}`;
+  /* Remind on 1st-3rd of month if payroll wasn't exported last month */
+  if(now.getDate()<=3&&last.slice(0,7)!==prevMonth&&prevMonth>='2024-01'){
+    setTimeout(()=>showShareNotice(`📤 Reminder: Last month (${monthHuman(prevMonth)}) payroll hasn't been exported. Tap More Actions → Payroll CSV`),2000);
+  }
+  /* Weekly backup-download reminder: if no download in last 7 days */
+  const lastDl=localStorage.getItem(LAST_BACKUP_DL_KEY)||'';
+  if(lastDl){
+    const daysSince=Math.floor((Date.now()-new Date(lastDl).getTime())/(864e5));
+    if(daysSince>=7)setTimeout(()=>showShareNotice(`⬇ It's been ${daysSince} days since your last backup download. Tap More Actions → Download Backup.`),5000);
+  }else{
+    /* Never downloaded — remind after 3 days of data */
+    const hasDays=Object.keys(db.days||{}).length;
+    if(hasDays>=3)setTimeout(()=>showShareNotice('💡 Tip: Download a backup file from More Actions → Download Backup to protect your data.'),4000);
+  }
+}
+
+/* ── GOOGLE SHEETS — SIGN IN WITH GOOGLE + SHEETS API ───────── */
+const GS_CLIENT_KEY='gg_gs_client_v1', GS_HOST_KEY='gg_gs_host_v1', GS_SHEET_ID_KEY='gg_gs_sheetid_v1';
+const GS_SCOPES='https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+let gsTokenClient=null, gsToken=null;
+
+function openGSheets(){
+  const cid=localStorage.getItem(GS_CLIENT_KEY);
+  document.getElementById('gsSetupSection').style.display=cid?'none':'block';
+  document.getElementById('gsSyncSection').style.display=cid?'block':'none';
+  document.getElementById('gsSyncStatus').textContent='';
+  if(cid)_gsLoadLib(cid);
+  document.getElementById('gsheetsModal').classList.add('show');
+}
+
+function saveGsSetup(){
+  const cid=document.getElementById('gsClientId').value.trim();
+  const host=document.getElementById('gsHostUrl').value.trim();
+  if(!cid){showShareNotice('Please enter your Google Client ID');return}
+  if(!cid.includes('.apps.googleusercontent.com')){showShareNotice('⚠ That does not look like a valid Client ID');return}
+  localStorage.setItem(GS_CLIENT_KEY,cid);
+  if(host)localStorage.setItem(GS_HOST_KEY,host);
+  document.getElementById('gsSetupSection').style.display='none';
+  document.getElementById('gsSyncSection').style.display='block';
+  _gsLoadLib(cid);
+  showShareNotice('Setup saved ✓ Now tap "Sign in with Google"');
+}
+
+function resetGsSetup(){
+  localStorage.removeItem(GS_CLIENT_KEY);localStorage.removeItem(GS_SHEET_ID_KEY);
+  gsToken=null;gsTokenClient=null;
+  document.getElementById('gsSetupSection').style.display='block';
+  document.getElementById('gsSyncSection').style.display='none';
+  document.getElementById('gsClientId').value=localStorage.getItem(GS_CLIENT_KEY)||'';
+}
+
+function _gsLoadLib(cid){
+  if(window.google&&window.google.accounts){_gsSetupClient(cid);return}
+  const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';
+  s.onload=()=>_gsSetupClient(cid);
+  s.onerror=()=>{document.getElementById('gsSyncStatus').textContent='❌ Could not load Google login. Check internet.'};
+  document.head.appendChild(s);
+}
+
+function _gsSetupClient(cid){
+  try{
+    gsTokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:cid,scope:GS_SCOPES,
+      callback:async resp=>{
+        if(resp.error){
+          document.getElementById('gsSyncStatus').textContent='❌ Sign-in failed: '+resp.error;
+          document.getElementById('gsSyncStatus').style.color='#b3261e';return;
+        }
+        gsToken=resp.access_token;
+        /* get user name to display */
+        try{
+          const u=await(await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
+            {headers:{Authorization:'Bearer '+gsToken}})).json();
+          document.getElementById('gsUserBadge').innerHTML=
+            `✅ Signed in as <strong>${escHTML(u.name||u.email||'Google User')}</strong>`;
+        }catch(e){}
+        document.getElementById('gsSignInBtn').style.display='none';
+        document.getElementById('gsSyncBtn').style.display='block';
+        await gsDoSync();
+      }
+    });
+  }catch(e){document.getElementById('gsSyncStatus').textContent='❌ Google auth error: '+e.message}
+}
+
+function gsSignIn(){
+  if(!gsTokenClient){showShareNotice('Please wait a moment then try again');return}
+  gsTokenClient.requestAccessToken({prompt:gsToken?'':'select_account'});
+}
+
+function gsSignOut(){
+  if(gsToken)try{google.accounts.oauth2.revoke(gsToken,()=>{})}catch(e){}
+  gsToken=null;
+  document.getElementById('gsSignInBtn').style.display='block';
+  document.getElementById('gsSyncBtn').style.display='none';
+  document.getElementById('gsUserBadge').textContent='Not signed in';
+  document.getElementById('gsOpenLink').style.display='none';
+  document.getElementById('gsSyncStatus').textContent='';
+}
+
+async function gsDoSync(){
+  const st=document.getElementById('gsSyncStatus');
+  if(!gsToken){gsSignIn();return}
+  st.textContent='🔄 Connecting…';st.style.color='var(--muted)';
+  try{
+    let sid=localStorage.getItem(GS_SHEET_ID_KEY);
+    if(!sid){
+      st.textContent='📄 Creating your Google Sheet…';
+      sid=await _gsCreateSheet();
+      localStorage.setItem(GS_SHEET_ID_KEY,sid);
+    }
+    st.textContent='📤 Writing attendance data…';
+    await _gsWriteData(sid);
+    st.textContent='✅ Synced! Data is live in Google Sheets.';st.style.color='#1b6b35';
+    const href=`https://docs.google.com/spreadsheets/d/${sid}`;
+    document.getElementById('gsSheetHref').href=href;
+    document.getElementById('gsOpenLink').style.display='block';
+    showShareNotice('✅ Google Sheets sync complete!');
+    localStorage.setItem(LAST_EXPORT_KEY,today());
+  }catch(e){
+    if((e.message||'').includes('401')){
+      gsToken=null;
+      document.getElementById('gsSignInBtn').style.display='block';
+      document.getElementById('gsSyncBtn').style.display='none';
+      st.textContent='⚠ Session expired — please sign in again';st.style.color='#8a6100';
+    }else{
+      st.textContent='❌ '+(e.message||'Sync failed');st.style.color='#b3261e';
+    }
+  }
+}
+
+async function _gsCreateSheet(){
+  const r=await fetch('https://sheets.googleapis.com/v4/spreadsheets',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+gsToken,'Content-Type':'application/json'},
+    body:JSON.stringify({
+      properties:{title:'Garden Grow Attendance — '+today().slice(0,7)},
+      sheets:[
+        {properties:{title:'Attendance',sheetId:0}},
+        {properties:{title:'Leave',sheetId:1}},
+        {properties:{title:'Monthly Summary',sheetId:2}}
+      ]
+    })
+  });
+  const d=await r.json();
+  if(!r.ok)throw new Error(d.error?.message||'Could not create Google Sheet');
+  return d.spreadsheetId;
+}
+
+async function _gsWriteData(sid){
+  /* ── build all three sheets worth of data ── */
+  const attRows=[['Date','Day','Emp No','Employee Name','Status','In','Out','OT Hrs','Day Value','Note']];
+  Object.keys(db.days).sort().forEach(date=>{
+    const dayName=new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'short'});
+    employees.forEach(e=>{
+      const r=(db.days[date]||{})[e.no];
+      if(r)attRows.push([date,dayName,e.no,e.name,r.status||'',r.in||'',r.out||'',+(r.ot||0),+(r.dayVal||0),r.note||'']);
+    });
+  });
+
+  const leaveRows=[['Emp No','Name','Start Date','End Date','Working Days','Note']];
+  (db.leaves||[]).forEach(l=>{
+    const e=employees.find(x=>x.no===l.empNo)||{name:l.empNo};
+    leaveRows.push([l.empNo,e.name,l.start,l.end,l.days,l.note||'']);
+  });
+
+  const months=[...new Set(Object.keys(db.days).map(d=>d.slice(0,7)))].sort();
+  const sumRows=[['Month','Emp No','Name','Days Worked','OT Hours','Present','Half Day','Absent','Leave Days']];
+  months.forEach(m=>monthlySummary(m).forEach(r=>
+    sumRows.push([m,r.empNo,r.name,r.days,+r.ot.toFixed(2),r.p,r.h,r.a,r.l])
+  ));
+
+  /* clear existing data */
+  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}/values:batchClear`,{
+    method:'POST',
+    headers:{Authorization:'Bearer '+gsToken,'Content-Type':'application/json'},
+    body:JSON.stringify({ranges:['Attendance!A:Z','Leave!A:Z','Monthly Summary!A:Z']})
+  });
+
+  /* write new data */
+  const wr=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}/values:batchUpdate`,{
+    method:'POST',
+    headers:{Authorization:'Bearer '+gsToken,'Content-Type':'application/json'},
+    body:JSON.stringify({valueInputOption:'RAW',data:[
+      {range:'Attendance!A1',values:attRows},
+      {range:'Leave!A1',values:leaveRows},
+      {range:'Monthly Summary!A1',values:sumRows}
+    ]})
+  });
+  if(!wr.ok){const e=await wr.json();throw new Error(e.error?.message||'Write failed')}
+
+  /* format headers bold + green (best-effort) */
+  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`,{
+    method:'POST',
+    headers:{Authorization:'Bearer '+gsToken,'Content-Type':'application/json'},
+    body:JSON.stringify({requests:[0,1,2].map(s=>({repeatCell:{
+      range:{sheetId:s,startRowIndex:0,endRowIndex:1},
+      cell:{userEnteredFormat:{
+        backgroundColor:{red:.08,green:.24,blue:.16},
+        textFormat:{bold:true,foregroundColor:{red:1,green:1,blue:1}}
+      }},
+      fields:'userEnteredFormat(backgroundColor,textFormat)'
+    }}))})
+  }).catch(()=>{});/* non-critical */
+}
+
+/* ── AUTO-BACKUP VIEWER ─────────────────────────────────────── */
+function openAutoBackups(){
+  renderAutoBackupsList();
+  updateStorageMeter();
+  document.getElementById('autoBackupModal').classList.add('show');
+}
+
+function renderAutoBackupsList(){
+  const box=document.getElementById('autoBackupList');if(!box)return;
+  let b={};
+  try{b=JSON.parse(localStorage.getItem(AUTOBACK)||'{}')}catch(e){}
+  const keys=Object.keys(b).sort().reverse(); /* newest first */
+  if(!keys.length){
+    box.innerHTML='<div style="font-size:12px;color:var(--muted);padding:12px 0;text-align:center">No auto-backups yet. Save some attendance records first.</div>';
+    return;
+  }
+  box.innerHTML=keys.map((stamp,i)=>{
+    const entry=b[stamp];
+    const data=entry.data||entry; /* support both new {data,emp,days} and old raw-db format */
+    const empCount=entry.emp||(data.days?Object.values(data.days)[0]?Object.keys(Object.values(data.days)[0]).length:0:0);
+    const dayCount=entry.days||Object.keys(data.days||{}).length;
+    const leaveCount=(data.leaves||[]).length;
+    /* Human-readable timestamp */
+    const dt=new Date(stamp.replace('T',' '));
+    const dateStr=dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    const timeStr=`${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+    const isLatest=i===0;
+    return `<div class="backupItem">
+      <div style="flex:1;min-width:0">
+        <div class="bTime">${dateStr} &nbsp;<span style="color:var(--green2)">${timeStr}</span>${isLatest?'&nbsp;<span style="background:#edf8ef;color:#1b6b35;font-size:9px;padding:1px 5px;border-radius:999px;font-weight:900">Latest</span>':''}</div>
+        <div class="bDate">${dayCount} day record${dayCount!==1?'s':''} &nbsp;·&nbsp; ${leaveCount} leave record${leaveCount!==1?'s':''}</div>
+      </div>
+      <button class="bBtn btnSoft" onclick="restoreFromAutoBackup('${escHTML(stamp)}')">Restore</button>
+    </div>`;
+  }).join('');
+}
+
+function restoreFromAutoBackup(stamp){
+  let b={};
+  try{b=JSON.parse(localStorage.getItem(AUTOBACK)||'{}')}catch(e){}
+  const entry=b[stamp];
+  if(!entry){showShareNotice('Backup not found.');return}
+  const data=entry.data||entry;
+  if(typeof data.days!=='object'){showShareNotice('Backup data is invalid.');return}
+  /* Confirm via the share notice then restore after short delay */
+  showShareNotice('⚠ Restoring from '+new Date(stamp.replace('T',' ')).toLocaleString('en-GB')+' — tap Restore again to confirm.');
+  if(window._restorePending===stamp){
+    db=JSON.parse(JSON.stringify(data));
+    if(!db.leaves)db.leaves=[];
+    localStorage.setItem(STORE,JSON.stringify(db));
+    queueMicrotask(()=>mirrorAllToIDB());
+    document.getElementById('autoBackupModal').classList.remove('show');
+    renderCards();renderLeave();showSummary(currentSummary);
+    showShareNotice('✅ Restored from auto-backup: '+new Date(stamp.replace('T',' ')).toLocaleString('en-GB'));
+    window._restorePending=null;
+  }else{
+    window._restorePending=stamp;
+    clearTimeout(window._restorePendingT);
+    window._restorePendingT=setTimeout(()=>{window._restorePending=null},8000);
+  }
+}
+
+/* ── ONE-CLICK BACKUP DOWNLOAD ──────────────────────────────── */
+function downloadBackupNow(){
+  saveDay(false);
+  const filename=`GardenGrow_Backup_${today()}.json`;
+  const content=JSON.stringify({
+    exportedAt:new Date().toISOString(),
+    version:'v30',
+    employees,
+    data:db
+  },null,2);
+  /* Use <a download> — works without Share API, saves directly to Downloads */
+  try{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([content],{type:'application/json'}));
+    a.download=filename;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+    localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());
+    showShareNotice('✅ Backup downloaded: '+filename);
+  }catch(e){
+    /* Fallback: use shareFile (Share API) */
+    shareFile(filename,content,'application/json');
+    localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());
+  }
+}
+
+/* ── STORAGE QUOTA MONITOR ──────────────────────────────────── */
+function checkStorageQuota(){
+  const usedKB=getStorageUsedKB();
+  if(usedKB>4500){
+    showShareNotice(`⚠ Device storage is ${usedKB}KB — nearly full! Download a backup now and clear old auto-backups.`);
+  }
+  return usedKB;
+}
+
+function getStorageUsedKB(){
+  try{
+    return Math.round(Object.keys(localStorage).reduce((sum,k)=>{
+      return sum+(localStorage.getItem(k)||'').length+k.length;
+    },0)/1024);
+  }catch(e){return 0}
+}
+
+function updateStorageMeter(){
+  const used=getStorageUsedKB();
+  const limitKB=5120; /* conservative 5 MB estimate */
+  const pct=Math.min(100,Math.round(used/limitKB*100));
+  const fill=document.getElementById('storageBarFill');
+  const lbl=document.getElementById('storageUsedLabel');
+  const hint=document.getElementById('storageHint');
+  if(fill){
+    fill.style.width=pct+'%';
+    fill.className='storageBarFill'+(pct>=80?' danger':pct>=60?' warn':'');
+  }
+  if(lbl)lbl.textContent=used+'KB / ~5MB ('+pct+'%)';
+  if(hint){
+    const backupCount=Object.keys(JSON.parse(localStorage.getItem(AUTOBACK)||'{}')).length;
+    hint.textContent=backupCount+' auto-backup point'+(backupCount!==1?'s':'')+' stored on this device.';
+  }
+}
+
+/* ── ENHANCED INIT ──────────────────────────────────────────── */
+async function bootstrap(){
+  await hydrateStorage();
+  initDark();
+  if(mobileCompactDefault())allCardsCollapsed=true;
+  init();
+  /* Show last-saved time if data exists */
+  const lsRaw=localStorage.getItem(STORE);
+  if(lsRaw)updateLastSavedDisplay(true);
+  checkExportReminder();
+  /* Quota check with short delay so UI renders first */
+  setTimeout(checkStorageQuota,3000);
+}
+bootstrap();
+</script>
+</body>
+</html>
