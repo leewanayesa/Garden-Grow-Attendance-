@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Garden Grow Attendance v43</title>
+<title>Garden Grow Attendance v45</title>
 <meta name="theme-color" content="#153d29">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -163,6 +163,13 @@ h1{font-size:13px;margin:0;font-weight:950;line-height:1;padding-right:64px}
 .backupReminder button.btnSoft{background:#fff;border:1px solid #e0c98a;color:#7a5a00;padding:3px 9px}
 /* Card tools row: search + collapse toggle */
 .cardTools{display:flex;align-items:center;gap:7px;margin:0 0 7px}
+.applyAllBar{display:flex;align-items:center;gap:7px;margin:0 0 9px;padding:7px 9px;background:#eef5ef;border:1px solid #d7e6db;border-radius:11px;flex-wrap:wrap}
+.applyAllLabel{font-size:11.5px;font-weight:700;color:var(--green);white-space:nowrap}
+.applyAllSel{flex:1;min-width:96px;min-height:32px;padding:5px 8px;font-size:12.5px;font-weight:600;border:1px solid #cfe0d4;border-radius:9px;background:#fff;color:#1d2a20;cursor:pointer}
+.applyAllBtn{min-height:32px;padding:6px 13px;font-size:12px;font-weight:800;border-radius:9px;background:var(--green2);color:#fff;white-space:nowrap}
+html.dark .applyAllBar{background:#16271c;border-color:#2e4a38}
+html.dark .applyAllLabel{color:#9cc4a6}
+html.dark .applyAllSel{background:#1a2f22;color:#d0e8d0;border-color:#3a5a44}
 .searchWrap{position:relative;flex:1;display:flex;align-items:center}
 .searchWrap .searchIcon{position:absolute;left:9px;font-size:12px;opacity:.6;pointer-events:none}
 #empSearch{width:100%;min-height:34px!important;padding:6px 10px 6px 28px!important;font-size:13px!important;border:1px solid var(--line);border-radius:10px;background:#fff}
@@ -455,7 +462,7 @@ html.dark .previewTable tr:nth-child(even) td{background:#142019}
 html.dark .storageSection{background:#142019;border-color:#2e4a38}
 html.dark .storageBarTrack{background:#2a3f30}
 html.dark .backupItem{border-bottom-color:#2e4a38}
-/* ═══════════ v43 UI UPGRADE — easier to read, tap & navigate ═══════════ */
+/* ═══════════ v45 UI UPGRADE — easier to read, tap & navigate ═══════════ */
 :root{--hdr-h:58px}
 /* Header with logo */
 header{padding:0!important;min-height:58px}
@@ -517,7 +524,7 @@ html.dark .dayStrip{background:#16271b;border-color:#21402b}
     <div class="hdrLeaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div>
     <div class="hdrText">
       <h1>Garden Grow</h1>
-      <div class="sub">Attendance &middot; Landscaping &amp; Gardening LLC <span id="verTag" class="verTag">v43</span></div>
+      <div class="sub">Attendance &middot; Landscaping &amp; Gardening LLC <span id="verTag" class="verTag">v45</span></div>
     </div>
     <button class="darkBtn" id="darkToggleBtn" onclick="toggleDark()">🌙 Dark</button>
   </div>
@@ -637,6 +644,18 @@ html.dark .dayStrip{background:#16271b;border-color:#21402b}
       <input id="empSearch" type="search" placeholder="Search employee…" oninput="filterEmps(this.value)" autocomplete="off">
     </div>
     <button id="cardToggleAllBtn" class="compactBtn" onclick="toggleAllCards()">Expand All</button>
+  </div>
+
+  <div class="applyAllBar">
+    <span class="applyAllLabel">Set everyone to:</span>
+    <select id="applyAllSelect" class="applyAllSel">
+      <option value="P">Present</option>
+      <option value="A">Absent</option>
+      <option value="H">Half Day</option>
+      <option value="L">Leave</option>
+      <option value="O">Day Off</option>
+    </select>
+    <button class="applyAllBtn" onclick="applyAllFromPicker()">Apply to all</button>
   </div>
 
   <div id="cards" class="cards"></div>
@@ -943,7 +962,7 @@ let db={days:{},leaves:[]}, currentDate=today(), currentSummary='daily',
     leaveCalendarMonth=today().slice(0,7),
     pendingDeleteLeaveIdx=null,
     allCardsCollapsed=false;
-let _dirty=false, _empFilter='', _lsFull=false, _recoveredCount=0;
+let _dirty=false, _empFilter='', _lsFull=false, _recoveredCount=0, _undoBaseline=null;
 const _calcSaveTimers={};
 
 /* ── DB ─────────────────────────────────────────────────────── */
@@ -953,9 +972,11 @@ let undoHistory=[];
 const UNDO_LIMIT=10;
 
 function saveDB(){
-  /* Push current state to undo history before overwriting */
-  undoHistory.push(JSON.parse(JSON.stringify(db)));
+  /* Push the state as it was BEFORE this change (the baseline), so Undo
+     reverts correctly. Then this saved state becomes the new baseline. */
+  undoHistory.push(_undoBaseline?_undoBaseline:JSON.parse(JSON.stringify(db)));
   if(undoHistory.length>UNDO_LIMIT)undoHistory.shift();
+  _undoBaseline=JSON.parse(JSON.stringify(db));
   safePersist();
   _dirty=false;
   autoLocalBackup();
@@ -972,6 +993,7 @@ function autoSave(){
   _dirty=false;
   updateLastSavedDisplay(true);
   updateSaveBar();
+  scheduleDriveSync();
 }
 
 /* Central durable write: stamp a revision, write to localStorage (pruning
@@ -1241,6 +1263,8 @@ function init(){
   window.addEventListener('beforeunload',()=>{flushPending();});
   updateSaveBar();
   checkBackupReminder();
+  /* establish undo baseline = fully loaded state (after auto-commit) */
+  _undoBaseline=JSON.parse(JSON.stringify(db));
 }
 function registerAttendancePWA(){
   window.addEventListener('beforeinstallprompt',e=>{
@@ -1480,6 +1504,24 @@ function applyAll(){
   const ot=+(val('defaultOT')||0),inn=val('defaultIn'),out=val('defaultOut');
   employees.forEach(e=>{day()[e.no]={status:'P',in:inn,out,ot,dayVal:1,note:(day()[e.no]||{}).note||''}});
   saveDB();renderCards();
+}
+/* Apply a chosen status to EVERY employee for the current day (undoable). */
+function applyAllStatus(status){
+  if(!ST_WORD[status])return;
+  const useTimes=(status==='P'||status==='H');
+  const inn=useTimes?val('defaultIn'):'';
+  const out=useTimes?val('defaultOut'):'';
+  const ot=useTimes?(+(val('defaultOT')||0)):0;
+  const dv=status==='P'?1:status==='H'?0.5:0;
+  const d=day();
+  employees.forEach(e=>{d[e.no]={status,in:inn,out,ot,dayVal:dv,note:(d[e.no]||{}).note||''}});
+  saveDB();
+  renderCards();showSummary(currentSummary);
+  showShareNotice('Set all '+employees.length+' employees to “'+ST_WORD[status]+'” · tap Undo to reverse');
+}
+function applyAllFromPicker(){
+  const sel=document.getElementById('applyAllSelect');
+  applyAllStatus(sel?sel.value:'P');
 }
 /* FIX: saveDay — removed alert(), uses flashSaved + toast instead */
 function saveDay(show){
@@ -1930,13 +1972,31 @@ function syncLeaveDays(){
 }
 function addLeave(){
   const emp=val('leaveEmp'),s=leaveStartVal,e=leaveEndVal;
+  if(!emp){showShareNotice('Please choose an employee');return}
+  if(!s||!e||e<s){showShareNotice('Please choose a valid start and end date');return}
   const days=countWorkingDays(s,e);
   if(!db.leaves)db.leaves=[];
-  db.leaves.push({month:s.slice(0,7),empNo:emp,start:s,end:e,days,note:val('leaveNote')});
+  const note=val('leaveNote');
+  db.leaves.push({month:s.slice(0,7),empNo:emp,start:s,end:e,days,note});
+  /* LINK: write Leave into the daily attendance for each working day in the range,
+     so monthly/weekly/salary summaries count it even for days not opened yet.
+     Only fills days with no existing record — never overwrites manual entries. */
+  let filled=materializeLeaveDays(emp,s,e,note);
   leaveCalendarMonth=s.slice(0,7);
   window._leaveCalManualSet=true; /* stay on the month we just saved */
-  saveDB();document.getElementById('leaveNote').value='';renderLeave();
-  showShareNotice('Leave record saved ✓');
+  saveDB();document.getElementById('leaveNote').value='';renderLeave();renderCards();
+  showShareNotice('Leave saved ✓'+(filled?(' · '+filled+' day'+(filled===1?'':'s')+' marked Leave'):''));
+}
+/* Fill working days in [s,e] with status L for this employee, if not already recorded. */
+function materializeLeaveDays(empNo,s,e,note){
+  let n=0;const start=new Date(s+'T12:00:00'),end=new Date(e+'T12:00:00');
+  for(let dt=new Date(start);dt<=end;dt.setDate(dt.getDate()+1)){
+    const iso=`${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+    if(isWeekend(iso))continue;
+    if(!db.days[iso])db.days[iso]={};
+    if(!db.days[iso][empNo]){db.days[iso][empNo]={status:'L',in:'',out:'',ot:0,dayVal:0,note:'On leave'+(note?': '+note:'')};n++;}
+  }
+  return n;
 }
 /* FIX: deleteLeave uses inline confirm bar — no native confirm() */
 function askDeleteLeave(i){
@@ -2174,7 +2234,8 @@ function hideUndoBar(){
 function undoSave(){
   if(!undoHistory.length){showShareNotice('Nothing to undo');return}
   db=undoHistory.pop();
-safePersist();
+  _undoBaseline=JSON.parse(JSON.stringify(db));
+  safePersist();
   renderCards();renderLeave();showSummary(currentSummary);
   const remaining=undoHistory.length;
   if(remaining>0)showUndoBar();
@@ -2557,7 +2618,7 @@ let driveTokenClient=null, driveToken=null, driveTokenExp=0, _driveSyncTimer=nul
 
 function driveConfigured(){return !!localStorage.getItem(GS_CLIENT_KEY);}
 function driveAutoOn(){return driveConfigured() && localStorage.getItem(DRIVE_AUTOSYNC_KEY)!=='off';}
-function driveBackupPayload(){return JSON.stringify({exportedAt:new Date().toISOString(),version:'v42',employees,data:db},null,2);}
+function driveBackupPayload(){return JSON.stringify({exportedAt:new Date().toISOString(),version:'v45',employees,data:db},null,2);}
 function driveLastSyncHuman(){const t=localStorage.getItem(DRIVE_LASTSYNC_KEY);if(!t)return'';try{return new Date(t).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch(e){return''}}
 
 function _driveLoadLib(){
