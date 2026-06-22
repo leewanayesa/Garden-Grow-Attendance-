@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Garden Grow Attendance v30</title>
+<title>Garden Grow Attendance v43</title>
 <meta name="theme-color" content="#153d29">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -79,9 +82,9 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{
   margin:0;background:var(--bg);color:#17221b;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
   font-size:16px;width:100%;max-width:100%;overflow-x:hidden;
-  -webkit-text-size-adjust:100%;touch-action:manipulation;
+  -webkit-text-size-adjust:100%;touch-action:manipulation;padding-bottom:64px;
 }
 html,body{
   /* Mobile stability: prevent sideways drift and overscroll bounce chains */
@@ -112,6 +115,7 @@ header{
 }
 h1{font-size:13px;margin:0;font-weight:950;line-height:1;padding-right:64px}
 .sub{font-size:7.8px;opacity:.88;margin-top:0;line-height:1;padding-right:64px}
+.verTag{display:inline-block;font-size:8px;font-weight:800;background:rgba(255,255,255,.18);color:#fff;border-radius:999px;padding:1px 6px;margin-left:5px;letter-spacing:.03em;opacity:.95;vertical-align:1px}
 /* ── TABS ──────────────────────────────────────────────────── */
 /* FIX: single sticky top using CSS var — no more competing !important offsets */
 .tabs{
@@ -141,9 +145,36 @@ h1{font-size:13px;margin:0;font-weight:950;line-height:1;padding-right:64px}
 .mainActions{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .mainActions button{font-size:12px!important;min-height:29px;padding:3px;border-radius:9px}
 .moreToggle{margin-top:5px;width:100%;background:#fff7df;color:#17221b;border:1px solid #e2ca6a;font-size:12px!important;min-height:29px;padding:3px;border-radius:9px}
-.morePanel{display:none;margin-top:5px;grid-template-columns:1fr 1fr;gap:5px}
-.morePanel.open{display:grid}
+.morePanel{display:none;margin-top:5px}
+.morePanel.open{display:block}
 .morePanel button{font-size:10.5px!important;min-height:29px;padding:3px;border-radius:9px}
+.moreGroup{font-size:9.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:7px 2px 3px}
+.moreGroup:first-child{margin-top:2px}
+.moreRow{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+/* Primary daily action = green & prominent; Save Day = soft secondary */
+.mainActions>button:first-child{background:var(--green2);color:#fff;font-weight:900}
+/* On-leave tag on card */
+.onLeaveTag{display:inline-block;background:#fff3d6;color:#7a5a00;border:1px solid #e6cf7a;border-radius:999px;padding:0 6px;font-size:9px;font-weight:900;margin-left:4px;vertical-align:1px}
+.noMatch{grid-column:1/-1;text-align:center;color:var(--muted);font-weight:800;padding:24px 10px}
+/* Backup reminder banner */
+.backupReminder{display:none;align-items:center;gap:6px;background:#fff3e0;border:1px solid #ffb74d;border-radius:10px;padding:7px 10px;margin-bottom:6px;font-size:12px;font-weight:900;color:#5d2e00}
+.backupReminder.show{display:flex}
+.backupReminder button{min-height:28px;font-size:11px!important;padding:3px 10px;border-radius:8px;background:var(--gold);color:#17221b}
+.backupReminder button.btnSoft{background:#fff;border:1px solid #e0c98a;color:#7a5a00;padding:3px 9px}
+/* Card tools row: search + collapse toggle */
+.cardTools{display:flex;align-items:center;gap:7px;margin:0 0 7px}
+.searchWrap{position:relative;flex:1;display:flex;align-items:center}
+.searchWrap .searchIcon{position:absolute;left:9px;font-size:12px;opacity:.6;pointer-events:none}
+#empSearch{width:100%;min-height:34px!important;padding:6px 10px 6px 28px!important;font-size:13px!important;border:1px solid var(--line);border-radius:10px;background:#fff}
+/* Sticky save status bar (above bottom tabs) */
+.saveBar{position:fixed;left:0;right:0;bottom:0;z-index:46;display:flex;align-items:center;gap:9px;
+  padding:8px 14px;background:#fff;border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+.saveBar.hidden{display:none}
+.saveBarLabel{flex:1;font-size:12.5px;font-weight:900;color:var(--green2)}
+.saveBar.dirty{background:#fff8ec;border-top-color:#ecca7a}
+.saveBar.dirty .saveBarLabel{color:#9a5b00}
+.saveBarBtn{min-height:36px!important;font-size:13px!important;padding:6px 16px!important;border-radius:10px;background:var(--green2);color:#fff;font-weight:900}
+.saveBar.dirty .saveBarBtn{background:#b8860b}
 /* FIX: inline confirm bar replaces alert()/confirm() native dialogs */
 .confirmBar{display:none;background:#fff3e0;border:1px solid #ffb74d;border-radius:9px;padding:7px 9px;margin-top:5px;font-size:12px;font-weight:900;color:#5d2e00;gap:6px;align-items:center;flex-wrap:wrap}
 .confirmBar.show{display:flex}
@@ -161,43 +192,52 @@ h1{font-size:13px;margin:0;font-weight:950;line-height:1;padding-right:64px}
 .searchRow{display:grid;grid-template-columns:1fr 78px;gap:5px;margin:4px 0 5px}
 .searchRow input{min-height:30px!important;font-size:13px!important;padding:5px 8px!important}
 .searchRow button{min-height:30px!important;font-size:11px!important}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:7px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:11px;align-items:start}
 /* ENHANCEMENT: colour-coded left border by attendance status */
-.emp{background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden;transition:border-color .15s}
-.emp.status-P{border-left:4px solid #2d6a4f}
-.emp.status-A{border-left:4px solid #b3261e}
-.emp.status-H{border-left:4px solid #c9a84c}
-.emp.status-L{border-left:4px solid #185fa5}
-.emp.status-O{border-left:4px solid #6b6b6b}
+.emp{background:#fff;border:1px solid #e6ece4;border-radius:0 14px 14px 0;box-shadow:0 1px 3px rgba(20,50,30,.05);overflow:hidden;transition:box-shadow .15s,border-color .15s}
+.emp:hover{box-shadow:0 2px 8px rgba(20,50,30,.08)}
+.editHint{display:none;font-size:9.5px;color:#aab3aa;text-align:center;padding-top:6px;letter-spacing:.02em}
+.emp.collapsed .editHint{display:block}
+.emp.status-P{border-left:5px solid #2d6a4f}
+.emp.status-A{border-left:5px solid #b3261e}
+.emp.status-H{border-left:5px solid #c9a84c}
+.emp.status-L{border-left:5px solid #185fa5}
+.emp.status-O{border-left:5px solid #6b6b6b}
 /* ENHANCEMENT: collapsible cards */
 .emp.collapsed .empBody{display:none}
-.empHead{display:flex;justify-content:space-between;gap:6px;align-items:center;padding:7px 9px;border-bottom:1px solid #edf0ec;cursor:pointer}
+.empHead{display:flex;flex-direction:column;gap:7px;align-items:stretch;padding:9px 11px;border-bottom:1px solid #edf0ec;cursor:pointer}
 .emp.collapsed .empHead{border-bottom:0}
-.empHeadLeft{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
-.empAvatar{width:30px;height:30px;border-radius:50%;background:var(--green2);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.empInfo{min-width:0}
-.empName{font-size:13px;font-weight:950;color:var(--green);line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.empNo{font-size:10px;color:var(--muted);font-weight:850;margin-top:1px}
+.empHeadTop{display:flex;justify-content:space-between;gap:7px;align-items:flex-start}
+.empHeadLeft{display:flex;align-items:flex-start;gap:9px;flex:1;min-width:0}
+.empAvatar{width:34px;height:34px;border-radius:50%;background:var(--green2);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.empInfo{min-width:0;flex:1}
+.empName{font-size:15px;font-weight:600;color:#14532d;line-height:1.22;letter-spacing:-.01em;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+.empMeta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:3px}
+.empNo{font-size:11px;color:#8a948a;font-weight:600}
 .empHeadRight{display:flex;gap:4px;align-items:center;flex-shrink:0}
 .badge{font-size:10px;font-weight:900;padding:2px 7px;border-radius:999px;white-space:nowrap}
 .badge-saved{background:#edf8ef;color:#1b6b35}
 .badge-new{background:#fff3cd;color:#8a4000}
 /* ENHANCEMENT: status pill visible even when card is collapsed */
-.statusPill{font-size:9.5px;font-weight:900;padding:2px 6px;border-radius:999px;white-space:nowrap}
+.statusPill{font-size:10px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
 .sp-P{background:#edf8ef;color:#1b6b35}.sp-A{background:#ffeaea;color:#b3261e}
-.sp-H{background:#fff8e1;color:#8a6100}.sp-L{background:#e8f0fe;color:#185fa5}
+.sp-H{background:#fff8e1;color:#8a6100}.sp-L{background:#fff3d6;color:#7a5a00;border:1px solid #e6cf7a}
 .sp-O{background:#f0f0f0;color:#555}
 .collapseArrow{font-size:12px;color:var(--muted);transition:transform .2s;flex-shrink:0;line-height:1}
 .emp.collapsed .collapseArrow{transform:rotate(-90deg)}
-.empBody{padding:7px 9px}
+.empBody{padding:10px 11px 11px}
 .rowA{display:grid;grid-template-columns:1fr 80px;gap:5px;margin-bottom:5px}
 .rowB{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px}
-.ot input{font-weight:900;text-align:center;border-color:#c9a84c;background:#fffdf2}
-.note textarea{height:38px}
+.rowTimes{display:grid;grid-template-columns:1fr 1fr 70px;gap:7px;margin-bottom:8px}
+.empBody .field label{font-size:10px!important;font-weight:600;color:#8a948a;letter-spacing:.01em;margin-bottom:4px;line-height:1.1;text-transform:none}
+.empBody .field input,.empBody .field select,.empBody .field textarea{font-size:13px!important;font-weight:500;min-height:34px;padding:6px 9px;border-radius:9px;border:1px solid #dfe5df;background:#fff;color:#1d2a20}
+.empBody .field select{cursor:pointer}
+.ot input{font-weight:700!important;text-align:center;border-color:#e7d9a8!important;background:#fffdf4!important;color:#6b5300!important}
+.note textarea{min-height:40px;resize:vertical}
 /* ── SUMMARY ───────────────────────────────────────────────── */
 .bar{background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:10px;margin-bottom:8px}
-.summaryPick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.summaryPick button{background:#e6f3eb;color:var(--green);font-size:13px!important;min-height:32px}
+.summaryPick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.summaryPick button{background:#e6f3eb;color:var(--green);font-size:12.5px!important;min-height:32px;padding:2px 4px}
 .summaryPick button.active{background:var(--green2);color:#fff}
 .summaryControl{display:grid;grid-template-columns:40px 1fr 40px;gap:6px;margin:7px 0}
 .summaryControl button{min-height:34px;font-size:13px!important}
@@ -316,7 +356,7 @@ table th:first-child{min-width:110px}
   .morePanel{grid-template-columns:1fr 1fr}
 }
 @media(max-width:360px){
-  .defaults,.rowA,.rowB,.mainActions,.morePanel{grid-template-columns:1fr}
+  .defaults,.rowA,.rowB,.rowTimes,.mainActions,.morePanel{grid-template-columns:1fr}
 }
 /* ── DARK MODE ─────────────────────────────────────────────── */
 html.dark{color-scheme:dark}
@@ -328,6 +368,14 @@ html.dark .topDock .panel{background:#182b1e}
 html.dark .tabs{background:#0d1f14;border-bottom-color:#2e4a38}
 html.dark .tabGrid button{background:#1a2f22;color:#7dbf8c}
 html.dark .dayStrip{background:#142019;border-color:#2e4a38}
+html.dark .quickStatus{background:#142019;border-color:#2e4a38}
+html.dark .qs{background:transparent;color:#9cc4a6;border:0}
+html.dark .qs:hover{background:#1f3327}
+html.dark .saveBar{background:#0d1f14;border-top-color:#2e4a38}
+html.dark .saveBar.dirty{background:#2a2410;border-top-color:#5a4a1a}
+html.dark #empSearch{background:#1a2f22;color:#d0e8d0;border-color:#3a5a44}
+html.dark .cardTools .compactBtn{background:#1a2f22;color:#7dbf8c;border-color:#2e4a38}
+html.dark .onLeaveTag{background:#3a3410;color:#e6cf7a;border-color:#5a4a1a}
 html.dark .leaveItem{background:#1e3426;border-color:#3a5a44}
 html.dark .leaveDay{background:#182b1e;border-color:#2a3f30}
 html.dark .leaveDay.blank{background:#121e16}
@@ -357,13 +405,17 @@ html.dark .previewTable td{border-color:#2e4a38}
 html.dark .previewTable tr:nth-child(even) td{background:#142019}
 .darkBtn{position:absolute;top:4px;right:8px;background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;min-height:22px!important;padding:1px 7px!important;font-size:10px!important;border-radius:7px;font-weight:700}
 /* ── QUICK STATUS BUTTONS ──────────────────────────────────── */
-.quickStatus{display:flex;gap:3px;flex-shrink:0}
-.qs{min-height:24px!important;padding:1px 5px!important;font-size:9px!important;border-radius:6px!important;font-weight:900;border:1.5px solid transparent}
-.qs-P{background:#edf8ef;color:#1b6b35;border-color:#b6d9c0}.qs-P.qs-on{background:#2d6a4f;color:#fff}
-.qs-A{background:#ffeaea;color:#b3261e;border-color:#f5b8b8}.qs-A.qs-on{background:#b3261e;color:#fff}
-.qs-H{background:#fff8e1;color:#8a6100;border-color:#e8d070}.qs-H.qs-on{background:#c9a84c;color:#fff}
-.qs-L{background:#e8f0fe;color:#185fa5;border-color:#a8c0f0}.qs-L.qs-on{background:#185fa5;color:#fff}
-.qs-O{background:#f0f0f0;color:#555;border-color:#ccc}.qs-O.qs-on{background:#666;color:#fff}
+.quickStatus{display:flex;gap:3px;width:100%;background:#eef1ed;border:1px solid #e4e9e3;border-radius:11px;padding:3px}
+.qs{flex:1;min-height:30px!important;padding:5px 2px!important;font-size:11px!important;border-radius:8px!important;font-weight:600;background:transparent;color:#5d6b60;border:0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.005em;transition:background .12s,color .12s}
+.qs:hover{background:#e3e8e2}
+.qs:focus,.qs:focus-visible{outline:none!important;box-shadow:none!important}
+.qs.qs-on{font-weight:700;box-shadow:0 1px 2px rgba(20,40,25,.16)}
+.qs:hover{background:#e9ede9}
+.qs-P.qs-on{background:#2d6a4f;color:#fff;border-color:#2d6a4f}
+.qs-A.qs-on{background:#b3261e;color:#fff;border-color:#b3261e}
+.qs-H.qs-on{background:#c9a84c;color:#fff;border-color:#c9a84c}
+.qs-L.qs-on{background:#185fa5;color:#fff;border-color:#185fa5}
+.qs-O.qs-on{background:#666;color:#fff;border-color:#666}
 /* ── UNDO BAR ──────────────────────────────────────────────── */
 .undoBar{display:none;background:#fffde7;border:1px solid #f9c74f;border-radius:9px;padding:6px 10px;margin-top:5px;font-size:12px;font-weight:900;color:#5a3e00;gap:8px;align-items:center}
 .undoBar.show{display:flex}
@@ -403,23 +455,86 @@ html.dark .previewTable tr:nth-child(even) td{background:#142019}
 html.dark .storageSection{background:#142019;border-color:#2e4a38}
 html.dark .storageBarTrack{background:#2a3f30}
 html.dark .backupItem{border-bottom-color:#2e4a38}
+/* ═══════════ v43 UI UPGRADE — easier to read, tap & navigate ═══════════ */
+:root{--hdr-h:58px}
+/* Header with logo */
+header{padding:0!important;min-height:58px}
+.hdrRow{display:flex;align-items:center;gap:11px;padding:9px 14px}
+.hdrLeaf{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdrLeaf svg{width:22px;height:22px;color:#dff0e2}
+.hdrText{flex:1;min-width:0}
+header h1{font-size:18px!important;font-weight:800!important;padding:0!important;line-height:1.15!important}
+header .sub{font-size:11.5px!important;opacity:.85!important;padding:0!important;line-height:1.2!important;margin-top:1px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.darkBtn{position:static!important;font-size:11px!important;min-height:32px!important;padding:5px 11px!important;border-radius:9px!important;flex-shrink:0;font-weight:700!important;white-space:nowrap}
+/* Readability — scoped to cards so the compact top dock is untouched */
+.empBody .field label{font-size:11px!important;font-weight:600!important;margin-bottom:4px!important}
+.empBody .field input,.empBody .field select,.empBody .field textarea{font-size:14px!important;min-height:40px!important;border-radius:10px!important}
+.empName{font-size:15.5px!important}
+.empNo{font-size:11.5px!important}
+.empAvatar{width:34px!important;height:34px!important;font-size:12px!important}
+.title{font-size:12.5px!important}
+.metric span{font-size:11.5px!important}
+.metric b{font-size:19px!important}
+.summaryContent table,.tableWrap table{font-size:12.5px!important}
+.tableWrap th,.tableWrap td{padding:7px 8px!important}
+/* Bigger, clearer quick-status pills */
+.quickStatus{gap:3px!important;padding:3px!important}
+.qs{flex:1;min-height:33px!important;min-width:0!important;padding:5px 3px!important;font-size:11.5px!important;border-radius:8px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Today stat bar — roomier */
+.dayStrip{font-size:12.5px!important;gap:10px!important;padding:8px 12px!important;border-radius:11px!important}
+/* Cards a touch roomier */
+.emp{border-radius:14px!important}
+.empHead{padding:10px 12px!important}
+.empBody{padding:10px 12px!important}
+.cards{gap:9px!important}
+/* ── BOTTOM NAVIGATION (thumb-friendly) ── */
+body{padding-bottom:calc(128px + env(safe-area-inset-bottom,0px))!important}
+.saveBar{bottom:calc(64px + env(safe-area-inset-bottom,0px))!important;z-index:47!important;box-shadow:0 -1px 8px rgba(0,0,0,.05)!important}
+.tabs{position:fixed!important;top:auto!important;bottom:0!important;left:0;right:0;z-index:48!important;
+  background:#fff!important;border-top:1px solid var(--line)!important;border-bottom:0!important;
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))!important;box-shadow:0 -2px 12px rgba(0,0,0,.07)!important}
+.tabGrid{grid-template-columns:repeat(3,1fr)!important;gap:4px!important;max-width:520px!important}
+.tabGrid button{background:transparent!important;color:var(--muted)!important;display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;gap:3px!important;min-height:52px!important;
+  font-size:11.5px!important;font-weight:700!important;border-radius:10px!important;padding:5px 2px!important}
+.tabGrid button svg{width:23px;height:23px}
+.tabGrid button.active{background:transparent!important;color:var(--green2)!important}
+.tabGrid button:active{background:var(--soft)!important}
+.navLbl{font-size:11.5px;line-height:1}
+/* Dark mode for new chrome */
+html.dark .tabs{background:#16271b!important;border-top-color:#21402b!important}
+html.dark .tabGrid button{color:#7a937f!important}
+html.dark .tabGrid button.active{color:#7dbf8c!important}
+html.dark .tabGrid button:active{background:#1a2f22!important}
+html.dark .dayStrip{background:#16271b;border-color:#21402b}
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <header style="position:relative">
-  <h1>Garden Grow Attendance</h1>
-  <div class="sub">Landscaping &amp; Gardening LLC • Daily • Summary • Annual Leave</div>
-  <button class="darkBtn" id="darkToggleBtn" onclick="toggleDark()">🌙 Dark</button>
+  <div class="hdrRow">
+    <div class="hdrLeaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div>
+    <div class="hdrText">
+      <h1>Garden Grow</h1>
+      <div class="sub">Attendance &middot; Landscaping &amp; Gardening LLC <span id="verTag" class="verTag">v43</span></div>
+    </div>
+    <button class="darkBtn" id="darkToggleBtn" onclick="toggleDark()">🌙 Dark</button>
+  </div>
 </header>
 
 <!-- TABS -->
+<!-- Sticky save status bar (daily page) -->
+<div id="saveBar" class="saveBar">
+  <span id="saveBarLabel" class="saveBarLabel">✓ All saved</span>
+  <button class="saveBarBtn" onclick="saveBarSave()">💾 Save Day</button>
+</div>
+
 <nav class="tabs">
   <div class="tabGrid">
-    <button id="tabDaily"   class="active" onclick="showPage('daily')">📋 Daily</button>
-    <button id="tabSummary"            onclick="showPage('summary')">📊 Summary</button>
-    <button id="tabLeave"              onclick="showPage('leave')">📅 Leave</button>
+    <button id="tabDaily"   class="active" onclick="showPage('daily')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg><span class="navLbl">Daily</span></button>
+    <button id="tabSummary"            onclick="showPage('summary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M8 17v-5"/><path d="M13 17V7"/><path d="M18 17v-9"/></svg><span class="navLbl">Summary</span></button>
+    <button id="tabLeave"              onclick="showPage('leave')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span class="navLbl">Leave</span></button>
   </div>
 </nav>
 
@@ -448,30 +563,43 @@ html.dark .backupItem{border-bottom-color:#2e4a38}
     <div class="panel gold">
       <div class="title">Actions</div>
       <div class="mainActions">
-        <button class="btnSoft" onclick="applyAll()">Apply All</button>
-        <!-- FIX: saveDay no longer uses alert() -->
-        <button onclick="saveDay(true)">💾 Save</button>
+        <button onclick="applyAll()">✅ All Present</button>
+        <button class="btnSoft" onclick="saveDay(true)">💾 Save Day</button>
       </div>
       <button class="moreToggle" onclick="toggleMore()">More Actions ▾</button>
       <div id="morePanel" class="morePanel">
-        <button class="btnSoft" onclick="showPage('summary');showSummary('daily')">Daily Summary</button>
-        <button class="btnSoft" onclick="showPage('summary');showSummary('monthly')">Monthly Summary</button>
-        <button class="btnSoft" onclick="showPage('summary');showSummary('weekly')">Weekly Summary</button>
-        <button class="btnSoft" onclick="showPage('leave')">Annual Leave</button>
-        <button class="btnGold" onclick="backup()">Backup JSON</button>
-        <!-- ENHANCEMENT: restore from backup -->
-        <button class="btnGold" onclick="openRestore()">Restore</button>
-        <button class="btnGold" onclick="exportAllExcel()">Excel</button>
-        <button class="btnSoft" onclick="exportPayrollCSV()">Payroll CSV</button>
-        <button class="btnSoft" onclick="promptInstallApp()">📲 Install app</button>
-        <button class="btnSoft" onclick="downloadSwJs()">⚙ Download sw.js</button>
-        <button class="btnSoft" onclick="openEmpMgr()">👥 Employees</button>
-        <button class="btnSoft" onclick="shareWhatsApp()">💬 WhatsApp</button>
-        <button class="btnSoft" onclick="openGSheets()">📊 Google Sheets</button>
-        <button class="btnSoft" onclick="markAllPresentMonth()">✅ All Present Month</button>
-        <button class="btnSoft" onclick="openEmpDefModal()">⏰ Emp Defaults</button>
-        <button class="btnSoft" onclick="openAutoBackups()">🗂 View Backups</button>
-        <button class="btnGold" onclick="downloadBackupNow()">⬇ Download Backup</button>
+        <div class="moreGroup">Reports</div>
+        <div class="moreRow">
+          <button class="btnSoft" onclick="showPage('summary');showSummary('daily')">Daily</button>
+          <button class="btnSoft" onclick="showPage('summary');showSummary('monthly')">Monthly</button>
+          <button class="btnSoft" onclick="showPage('summary');showSummary('weekly')">Weekly</button>
+          <button class="btnSoft" onclick="showPage('leave')">Annual Leave</button>
+        </div>
+        <div class="moreGroup">Backup &amp; Sync</div>
+        <div class="moreRow">
+          <button class="btnGold" onclick="downloadBackupNow()">⬇ Download Backup</button>
+          <button class="btnGold" onclick="backupToDriveNow()">☁ Back up to Drive</button>
+          <button class="btnSoft" onclick="restoreFromDriveNow()">⤓ Restore from Drive</button>
+          <button class="btnGold" onclick="backup()">Backup JSON</button>
+          <button class="btnGold" onclick="openRestore()">Restore</button>
+          <button class="btnSoft" onclick="openAutoBackups()">🗂 View Backups</button>
+          <button class="btnSoft" onclick="openGSheets()">📊 Google Sheets</button>
+          <button class="btnGold" onclick="exportAllExcel()">Excel</button>
+          <button class="btnSoft" onclick="exportPayrollCSV()">Payroll CSV</button>
+        </div>
+        <div class="moreGroup">Share</div>
+        <div class="moreRow">
+          <button class="btnSoft" onclick="shareWhatsApp()">💬 WhatsApp</button>
+        </div>
+        <div class="moreGroup">Setup</div>
+        <div class="moreRow">
+          <button class="btnSoft" onclick="openGapFinder()">📋 Check unrecorded days</button>
+          <button class="btnSoft" onclick="openEmpMgr()">👥 Employees</button>
+          <button class="btnSoft" onclick="openEmpDefModal()">⏰ Emp Defaults</button>
+          <button class="btnSoft" onclick="markAllPresentMonth()">✅ All Present Month</button>
+          <button class="btnSoft" onclick="promptInstallApp()">📲 Install app</button>
+          <button class="btnSoft" onclick="downloadSwJs()">⚙ Download sw.js</button>
+        </div>
       </div>
       <!-- Last saved timestamp -->
       <div id="lastSavedDisplay" class="lastSavedRow">—</div>
@@ -494,7 +622,20 @@ html.dark .backupItem{border-bottom-color:#2e4a38}
 
   <!-- ENHANCEMENT: live day summary strip -->
   <div id="dayStrip" class="dayStrip">Loading…</div>
-  <div class="compactBar">
+
+  <!-- Off-device backup reminder -->
+  <div id="backupReminder" class="backupReminder">
+    <span id="backupReminderText" style="flex:1">⚠ Time to back up</span>
+    <button onclick="downloadBackupNow()">⬇ Back up now</button>
+    <button class="btnSoft" onclick="dismissBackupReminder()">✕</button>
+  </div>
+
+  <!-- Employee search + collapse toggle -->
+  <div class="cardTools">
+    <div class="searchWrap">
+      <span class="searchIcon">🔍</span>
+      <input id="empSearch" type="search" placeholder="Search employee…" oninput="filterEmps(this.value)" autocomplete="off">
+    </div>
     <button id="cardToggleAllBtn" class="compactBtn" onclick="toggleAllCards()">Expand All</button>
   </div>
 
@@ -509,6 +650,7 @@ html.dark .backupItem{border-bottom-color:#2e4a38}
       <button id="sumDaily"   onclick="showSummary('daily')">Daily</button>
       <button id="sumWeekly"  onclick="showSummary('weekly')">Weekly</button>
       <button id="sumMonthly" onclick="showSummary('monthly')">Monthly</button>
+      <button id="sumSalary"  onclick="showSummary('salary')">Salary 15–15</button>
     </div>
     <div id="summaryPeriod"></div>
     <div id="summaryContent"></div>
@@ -704,7 +846,21 @@ html.dark .backupItem{border-bottom-color:#2e4a38}
 <div id="autoBackupModal" class="modalOverlay">
   <div class="modalBox" style="width:min(440px,96vw);max-height:90vh;display:flex;flex-direction:column">
     <div class="modalTitle">🗂 Auto-Backup History</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Up to 60 automatic save-points are kept on this device. Tap <strong>Restore</strong> to roll back to any point.</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Up to 30 daily save-points are kept on this device, plus a full copy in the app's large-capacity store. Tap <strong>Restore</strong> to roll back to any point.</div>
+
+    <!-- Google Drive backup -->
+    <div class="storageSection" style="margin-bottom:10px">
+      <div class="storageLbl"><span>☁ Google Drive backup</span></div>
+      <div id="driveStatus" style="font-size:10.5px;color:var(--muted);margin:2px 0 7px">Checking…</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <button class="btnGold" onclick="backupToDriveNow()">☁ Back up now</button>
+        <button class="btnSoft" onclick="restoreFromDriveNow()">⤓ Restore from Drive</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);font-weight:700;margin-top:7px">
+        <input type="checkbox" id="driveAutoChk" onchange="toggleDriveAuto(this.checked)" style="width:16px;height:16px">
+        Auto-sync to Drive after changes
+      </label>
+    </div>
 
     <!-- Storage meter -->
     <div class="storageSection">
@@ -739,6 +895,24 @@ html.dark .backupItem{border-bottom-color:#2e4a38}
   </div>
 </div>
 
+<!-- ══ FIND MISSING DAYS MODAL ══════════════════════════════ -->
+<div id="gapModal" class="modalOverlay">
+  <div class="modalBox" style="width:min(440px,96vw);max-height:90vh;display:flex;flex-direction:column">
+    <div class="modalTitle">📋 Unrecorded Working Days</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">A checklist of working days (weekends excluded) that have <strong>no attendance entered yet</strong> — usually days the app wasn't opened. This is not lost data; it's a reminder to fill days nobody recorded. Mark present if everyone was in, or open the day to edit.</div>
+    <div class="summaryControl" style="display:grid;grid-template-columns:36px 1fr 36px;gap:8px;align-items:center;margin-bottom:8px">
+      <button class="btnSoft" onclick="gapShift(-1)">‹</button>
+      <div id="gapMonthLabel" style="text-align:center;font-weight:800;color:var(--green)">—</div>
+      <button class="btnSoft" onclick="gapShift(1)">›</button>
+    </div>
+    <div id="gapList" style="flex:1;overflow-y:auto;max-height:300px;margin-bottom:8px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button id="gapFillAllBtn" onclick="fillAllGaps()">✅ Mark all present</button>
+      <button class="btnSoft" onclick="document.getElementById('gapModal').classList.remove('show')">Close</button>
+    </div>
+  </div>
+</div>
+
 <div id="shareNotice" class="shareNotice"></div>
 
 <script>
@@ -769,6 +943,7 @@ let db={days:{},leaves:[]}, currentDate=today(), currentSummary='daily',
     leaveCalendarMonth=today().slice(0,7),
     pendingDeleteLeaveIdx=null,
     allCardsCollapsed=false;
+let _dirty=false, _empFilter='', _lsFull=false, _recoveredCount=0;
 const _calcSaveTimers={};
 
 /* ── DB ─────────────────────────────────────────────────────── */
@@ -781,31 +956,91 @@ function saveDB(){
   /* Push current state to undo history before overwriting */
   undoHistory.push(JSON.parse(JSON.stringify(db)));
   if(undoHistory.length>UNDO_LIMIT)undoHistory.shift();
-  localStorage.setItem(STORE,JSON.stringify(db));
+  safePersist();
+  _dirty=false;
   autoLocalBackup();
-  queueMicrotask(()=>mirrorAllToIDB());
   flashSaved();
   showUndoBar();
   updateLastSavedDisplay(false);
+  updateSaveBar();
+  scheduleDriveSync();
 }
 
 /* Silent auto-save from debounced field changes — no undo snapshot, no undo bar */
 function autoSave(){
-  localStorage.setItem(STORE,JSON.stringify(db));
-  queueMicrotask(()=>mirrorAllToIDB());
+  safePersist();
+  _dirty=false;
   updateLastSavedDisplay(true);
+  updateSaveBar();
+}
+
+/* Central durable write: stamp a revision, write to localStorage (pruning
+   auto-backups if the quota is hit), and ALWAYS mirror to IndexedDB (large quota)
+   so the live data survives even when localStorage is full. */
+function safePersist(){
+  db.__rev=Date.now();
+  let lsOk=false;
+  try{localStorage.setItem(STORE,JSON.stringify(db));lsOk=true;}
+  catch(e){
+    try{pruneAutoBackLS(3);localStorage.setItem(STORE,JSON.stringify(db));lsOk=true;}
+    catch(e2){lsOk=false;}
+  }
+  if(!lsOk&&!_lsFull){_lsFull=true;showShareNotice('⚠ Phone storage is full. Your data is still saved on this device, but please download a backup and free up space.');}
+  if(lsOk)_lsFull=false;
+  queueMicrotask(()=>mirrorAllToIDB());
+  return lsOk;
+}
+/* Trim the localStorage auto-backup set down to `keep` newest entries (or clear it). */
+function pruneAutoBackLS(keep){
+  try{
+    let b=JSON.parse(localStorage.getItem(AUTOBACK)||'{}');
+    const ks=Object.keys(b).sort();
+    while(ks.length>keep)delete b[ks.shift()];
+    localStorage.setItem(AUTOBACK,JSON.stringify(b));
+  }catch(e){try{localStorage.removeItem(AUTOBACK)}catch(_){}}
+}
+
+/* ── DATA-SAFETY HELPERS ────────────────────────────────────── */
+/* Is this employee on booked annual leave on this date? */
+function leaveForDate(empNo,date){
+  return (db.leaves||[]).find(l=>l.empNo===empNo && date>=l.start && date<=l.end);
+}
+/* Ensure every employee has at least a default record for TODAY, so an
+   untouched "everyone present" day can never be lost. Leave days auto-fill as L. */
+function autoCommitDefaults(){
+  if(key()!==today())return false;
+  const d=day();let added=false;
+  employees.forEach(e=>{
+    if(!d[e.no]){
+      const lv=leaveForDate(e.no,key());
+      d[e.no]=lv
+        ?{status:'L',in:'',out:'',ot:0,dayVal:0,note:'On leave'+(lv.note?': '+lv.note:'')}
+        :{status:'P',in:loadedDefIn(),out:loadedDefOut(),ot:+(loadedDefOT()||0),dayVal:1,note:''};
+      added=true;
+    }
+  });
+  if(added){safePersist();updateLastSavedDisplay(true);}
+  return added;
+}
+/* Force-write any pending in-flight edit (covers the <1.5s debounce window). */
+function flushPending(){
+  Object.values(_calcSaveTimers).forEach(t=>clearTimeout(t));
+  if(_dirty){safePersist();_dirty=false;}
 }
 
 function autoLocalBackup(){
   try{
-    /* Key by full ISO timestamp (YYYY-MM-DDTHH:MM) — up to ~6 saves/day, keep 60 entries */
-    const stamp=new Date().toISOString().slice(0,16);
+    /* One snapshot per day (latest wins), size-bounded so it can never fill storage */
+    const stamp=today();
     let b=JSON.parse(localStorage.getItem(AUTOBACK)||'{}');
-    b[stamp]={data:db,emp:employees.length,days:Object.keys(db.days||{}).length};
-    const keys=Object.keys(b).sort();
-    while(keys.length>60)delete b[keys.shift()];
-    localStorage.setItem(AUTOBACK,JSON.stringify(b));
-  }catch(e){}
+    b[stamp]={data:db,emp:employees.length,days:Object.keys(db.days||{}).length,at:new Date().toISOString()};
+    let keys=Object.keys(b).sort();
+    while(keys.length>30)delete b[keys.shift()];
+    /* Hard size cap (~1.5 MB) regardless of how big the DB grows */
+    let s=JSON.stringify(b);
+    while(s.length>1500000&&Object.keys(b).length>3){const k=Object.keys(b).sort();delete b[k[0]];s=JSON.stringify(b);}
+    localStorage.setItem(AUTOBACK,s);
+  }catch(e){pruneAutoBackLS(8);}
 }
 
 /* Last-saved timestamp display */
@@ -853,38 +1088,65 @@ async function idbGet(key){
   }finally{d.close()}
 }
 async function mirrorAllToIDB(){
-  if(!('indexedDB'in window))return;
+  if(!('indexedDB'in window)||!window.indexedDB)return;
   try{
     await idbPut(STORE,db);
+    const emp=localStorage.getItem(EMPSTORE);
+    if(emp)await idbPut(EMPSTORE,JSON.parse(emp));
     const defs=localStorage.getItem(DEFSTORE);
     if(defs)await idbPut(DEFSTORE,JSON.parse(defs));
     const ab=localStorage.getItem(AUTOBACK);
     if(ab)await idbPut(AUTOBACK,JSON.parse(ab));
   }catch(e){console.warn('IDB mirror',e)}
 }
+/* Safe roster write: localStorage + IDB mirror, never throws */
+function safeSetEmployees(){
+  try{localStorage.setItem(EMPSTORE,JSON.stringify(employees));}catch(e){}
+  if('indexedDB'in window&&window.indexedDB){idbPut(EMPSTORE,employees).catch(()=>{});}
+}
 async function hydrateStorage(){
-  if(!('indexedDB'in window)){db=loadDB();return}
+  /* Load both stores and keep whichever has the newer revision, so a stale
+     localStorage (e.g. after a past quota error) can never shadow newer data. */
+  let lsDb=null;
   const rawLS=localStorage.getItem(STORE);
-  let parsed=null;
-  if(rawLS){try{parsed=JSON.parse(rawLS)}catch(e){parsed=null}}
-  const hasLocal=!!(rawLS&&parsed&&typeof parsed==='object'&&Object.prototype.hasOwnProperty.call(parsed,'days'));
-  let idbSnap=null;
-  try{idbSnap=await idbGet(STORE)}catch(e){idbSnap=null}
-  if(!hasLocal&&idbSnap&&typeof idbSnap==='object'&&idbSnap.days){
-    try{localStorage.setItem(STORE,JSON.stringify(idbSnap))}catch(e){}
+  if(rawLS){try{const p=JSON.parse(rawLS);if(p&&typeof p==='object'&&p.days)lsDb=p;}catch(e){}}
+  let idbDb=null;
+  if('indexedDB'in window&&window.indexedDB){try{const s=await idbGet(STORE);if(s&&typeof s==='object'&&s.days)idbDb=s;}catch(e){}}
+  let chosen=lsDb;
+  if(idbDb&&(!lsDb||(idbDb.__rev||0)>(lsDb.__rev||0)))chosen=idbDb;
+  db=chosen||{days:{},leaves:[]};
+  if(!db.leaves)db.leaves=[];
+  /* ── SILENT AUTO-RECOVERY ──────────────────────────────────
+     If the primary load is empty (e.g. data only survived in the IndexedDB
+     copy, the auto-backups, or under a slightly different key from an older
+     build), automatically adopt whichever source has the most days. This makes
+     opening the app on the same device "just load the data" with no action. */
+  if(!db.days||Object.keys(db.days).length===0){
+    let best=null,bestN=0;
+    const consider=(c)=>{if(c&&c.days&&typeof c.days==='object'){const n=Object.keys(c.days).length;if(n>bestN){bestN=n;best=c;}}};
+    consider(lsDb);consider(idbDb);
+    /* latest/largest auto-backup snapshot (localStorage) */
+    try{const ab=JSON.parse(localStorage.getItem(AUTOBACK)||'{}');Object.values(ab).forEach(s=>consider(s&&s.data));}catch(e){}
+    /* IndexedDB auto-backup snapshot */
+    if('indexedDB'in window&&window.indexedDB){try{const abI=await idbGet(AUTOBACK);if(abI&&typeof abI==='object')Object.values(abI).forEach(s=>consider(s&&s.data));}catch(e){}}
+    /* last resort: scan every localStorage key for anything holding a days map */
+    try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);try{const v=JSON.parse(localStorage.getItem(k));consider(v);}catch(e){}}}catch(e){}
+    if(best&&bestN>0){db=JSON.parse(JSON.stringify(best));if(!db.leaves)db.leaves=[];_recoveredCount=bestN;}
   }
-  let defsIdb=null;
-  try{defsIdb=await idbGet(DEFSTORE)}catch(e){defsIdb=null}
-  if(!localStorage.getItem(DEFSTORE)&&defsIdb!=null){
-    try{localStorage.setItem(DEFSTORE,typeof defsIdb==='object'?JSON.stringify(defsIdb):String(defsIdb))}catch(e){}
+  try{localStorage.setItem(STORE,JSON.stringify(db));}catch(e){pruneAutoBackLS(3);try{localStorage.setItem(STORE,JSON.stringify(db));}catch(_){}}
+  /* Defaults + auto-backup history: pull from IDB only if localStorage lacks them */
+  if('indexedDB'in window&&window.indexedDB){
+    let empIdb=null;try{empIdb=await idbGet(EMPSTORE)}catch(e){}
+    if(!localStorage.getItem(EMPSTORE)&&Array.isArray(empIdb)&&empIdb.length){
+      try{localStorage.setItem(EMPSTORE,JSON.stringify(empIdb))}catch(e){}
+      employees=empIdb;
+    }
+    let defsIdb=null;try{defsIdb=await idbGet(DEFSTORE)}catch(e){}
+    if(!localStorage.getItem(DEFSTORE)&&defsIdb!=null){try{localStorage.setItem(DEFSTORE,typeof defsIdb==='object'?JSON.stringify(defsIdb):String(defsIdb))}catch(e){}}
+    let abIdb=null;try{abIdb=await idbGet(AUTOBACK)}catch(e){}
+    if(!localStorage.getItem(AUTOBACK)&&abIdb!=null){try{localStorage.setItem(AUTOBACK,typeof abIdb==='object'?JSON.stringify(abIdb):String(abIdb))}catch(e){}}
   }
-  let abIdb=null;
-  try{abIdb=await idbGet(AUTOBACK)}catch(e){abIdb=null}
-  if(!localStorage.getItem(AUTOBACK)&&abIdb!=null){
-    try{localStorage.setItem(AUTOBACK,typeof abIdb==='object'?JSON.stringify(abIdb):String(abIdb))}catch(e){}
-  }
-  db=loadDB();
-  await mirrorAllToIDB();
+  queueMicrotask(()=>mirrorAllToIDB());
 }
 
 /* ── UTILS ──────────────────────────────────────────────────── */
@@ -893,6 +1155,7 @@ function pad(n){return String(n).padStart(2,'0')}
 function monthKey(){return currentDate.slice(0,7)}
 function key(){return currentDate}
 function short(n){return n.split(' ').slice(0,3).join(' ')}
+function titleCase(n){return String(n||'').toLowerCase().replace(/\b([a-z])/g,(m,c)=>c.toUpperCase())}
 function initials(n){const p=n.trim().split(/\s+/);return((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase()}
 function val(id){const el=document.getElementById(id);return el?el.value:''}
 function escHTML(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
@@ -972,6 +1235,12 @@ function init(){
   },{passive:false});
   syncCardToggleBtn();
   registerAttendancePWA();
+  /* ── Data-loss guards: flush any pending edit when app is hidden/closed ── */
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){flushPending();if(driveAutoOn())driveAutoSync();}});
+  window.addEventListener('pagehide',flushPending);
+  window.addEventListener('beforeunload',()=>{flushPending();});
+  updateSaveBar();
+  checkBackupReminder();
 }
 function registerAttendancePWA(){
   window.addEventListener('beforeinstallprompt',e=>{
@@ -1082,6 +1351,7 @@ function shiftDate(n){const d=new Date(currentDate+'T12:00:00');d.setDate(d.getD
 function quickToday(){setDate(today())}
 function shiftSummary(n){
   if(currentSummary==='monthly'){const d=new Date(currentDate+'T12:00:00');d.setMonth(d.getMonth()+n);setDate(d.toISOString().slice(0,10));}
+  else if(currentSummary==='salary'){const sp=salaryPeriod(currentDate);const d=new Date(sp.start+'T12:00:00');d.setMonth(d.getMonth()+n);setDate(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`);}
   else if(currentSummary==='weekly')shiftDate(n*7);
   else shiftDate(n);
   showSummary(currentSummary);
@@ -1146,6 +1416,8 @@ function showPage(p){
     document.getElementById(x+'Page').classList.toggle('active',x===p);
     document.getElementById('tab'+cap(x)).classList.toggle('active',x===p);
   });
+  const sb=document.getElementById('saveBar');if(sb)sb.classList.toggle('hidden',p!=='daily');
+  if(p==='daily')updateSaveBar();
   if(p==='summary')showSummary(currentSummary);
   if(p==='leave')renderLeave();
 }
@@ -1154,7 +1426,11 @@ function toggleMore(){document.getElementById('morePanel').classList.toggle('ope
 /* ── DAILY RECORDS ──────────────────────────────────────────── */
 function day(){if(!db.days[key()])db.days[key()]={};return db.days[key()]}
 function rec(no){
-  const st=val('st-'+no),otRaw=val('ot-'+no),ot=otRaw===''?0:+(otRaw||0),inn=val('in-'+no),out=val('out-'+no),note=val('note-'+no);
+  const cur=(db.days[key()]||{})[no]||{};
+  const stSel=document.getElementById('st-'+no);
+  const st=(stSel&&stSel.value)||cur.status||'P';
+  const otRaw=val('ot-'+no);let ot=parseFloat(otRaw);if(!Number.isFinite(ot)||ot<0)ot=0;
+  const inn=val('in-'+no),out=val('out-'+no),note=val('note-'+no);
   return{status:st,in:inn,out,ot,dayVal:st==='P'?1:st==='H'?0.5:0,note};
 }
 function calc(no){
@@ -1167,9 +1443,11 @@ function calc(no){
   /* Update in-memory immediately */
   if(!db.days[key()])db.days[key()]={};
   db.days[key()][no]=rec(no);
+  _dirty=true;
   /* Update card DOM immediately — no full re-render */
   updateCardStatus(no);
   updateDayStrip();
+  updateSaveBar();
   /* Debounced write to storage — 1.5 s after last field change */
   clearTimeout(_calcSaveTimers[no]);
   _calcSaveTimers[no]=setTimeout(autoSave,1500);
@@ -1182,7 +1460,14 @@ function updateCardStatus(no){
   const r=(db.days[key()]||{})[no];
   const st=r?r.status||'P':'P';
   card.className=card.className.replace(/\bstatus-\w+/g,'').trim()+' status-'+st;
-  card.querySelectorAll('.qs').forEach(b=>b.classList.toggle('qs-on',b.textContent.trim()===st));
+  card.querySelectorAll('.qs').forEach(b=>b.classList.toggle('qs-on',(b.dataset.st||'')===st));
+  const meta=card.querySelector('.empMeta');
+  if(meta){
+    const lv=leaveForDate(no,key());
+    const old=meta.querySelector('.statusPill');
+    const tmp=document.createElement('div');tmp.innerHTML=statusPillHTML(st,r||{},lv);
+    if(old)old.replaceWith(tmp.firstChild);else meta.appendChild(tmp.firstChild);
+  }
   const right=card.querySelector('.empHeadRight');
   if(right&&!right.querySelector('.badge-saved')){
     const badge=document.createElement('span');
@@ -1208,59 +1493,75 @@ function saveDay(show){
 /* Task 4: Clear Day removed — no longer needed */
 
 /* ── RENDER CARDS ───────────────────────────────────────────── */
+const ST_WORD={P:'Present',A:'Absent',H:'Half',L:'Leave',O:'Off'};
+function t12(t){if(!t)return'';let[h,m]=t.split(':').map(Number);h=h%12||12;return h+':'+pad(m);}
+/* At-a-glance status pill (word + time range where useful) */
+function statusPillHTML(st,r,lv){
+  const cls={P:'sp-P',A:'sp-A',H:'sp-H',L:'sp-L',O:'sp-O'}[st]||'sp-P';
+  let txt;
+  if(st==='L')txt=lv?'On leave':'Leave';
+  else if(st==='A')txt='Absent';
+  else if(st==='O')txt='Day Off';
+  else{const range=(r.in&&r.out)?(' · '+t12(r.in)+'–'+t12(r.out)):'';txt=(st==='H'?'Half':'Present')+range;}
+  return `<span class="statusPill ${cls}">${escHTML(txt)}</span>`;
+}
 function renderCards(){
+  autoCommitDefaults();
   const data=day();
-  document.getElementById('cards').innerHTML=employees.map(e=>{
+  const q=_empFilter.trim().toLowerCase();
+  const list=q?employees.filter(e=>e.name.toLowerCase().includes(q)||e.no.toLowerCase().includes(q)):employees;
+  const host=document.getElementById('cards');
+  if(!list.length){host.innerHTML=`<div class="noMatch">No employee matches “${escHTML(_empFilter)}”.</div>`;updateDayStrip();updateSaveBar();return;}
+  host.innerHTML=list.map(e=>{
     const saved=!!data[e.no];
-    /* Task 1: default status = Present. Task 2: no New badge — only show ✓ when saved */
-    const r=data[e.no]||{status:'P',in:loadedDefIn(),out:loadedDefOut(),ot:'',note:''};
+    const lv=leaveForDate(e.no,key());
+    /* default status = Present (or Leave if booked); ✓ shows only when saved */
+    const r=data[e.no]||{status:lv?'L':'P',in:loadedDefIn(),out:loadedDefOut(),ot:'',note:lv?('On leave'+(lv.note?': '+lv.note:'')):''};
     const st=r.status||'P';
     const collapseClass=allCardsCollapsed?' collapsed':'';
     return `<div class="emp status-${st}${collapseClass}" id="card-${e.no}">
       <div class="empHead" onclick="toggleCard('${e.no}')">
-        <div class="empHeadLeft">
-          <div class="empAvatar">${initials(e.name)}</div>
-          <div class="empInfo">
-            <div class="empName">${escHTML(short(e.name))}</div>
-            <div class="empNo">${escHTML(e.no)}</div>
+        <div class="empHeadTop">
+          <div class="empHeadLeft">
+            <div class="empInfo">
+              <div class="empName">${escHTML(titleCase(e.name))}</div>
+              <div class="empMeta">
+                <span class="empNo">${escHTML(e.no)}</span>
+                ${statusPillHTML(st,r,lv)}
+              </div>
+            </div>
+          </div>
+          <div class="empHeadRight">
+            ${saved?'<span class="badge badge-saved">✓</span>':''}
+            <span class="collapseArrow">▾</span>
           </div>
         </div>
-        <div class="empHeadRight">
-          <div class="quickStatus" onclick="event.stopPropagation()">
-            ${['P','A','H','L','O'].map(s=>`<button class="qs qs-${s}${st===s?' qs-on':''}" onclick="quickSetStatus('${e.no}','${s}')">${s}</button>`).join('')}
-          </div>
-          ${saved?'<span class="badge badge-saved">✓</span>':''}
-          <span class="collapseArrow">▾</span>
+        <div class="quickStatus" onclick="event.stopPropagation()">
+          ${['P','A','H','L','O'].map(s=>`<button class="qs qs-${s}${st===s?' qs-on':''}" data-st="${s}" onclick="quickSetStatus('${e.no}','${s}')">${ST_WORD[s]}</button>`).join('')}
         </div>
+        <div class="editHint">Tap to edit time · OT · note</div>
       </div>
       <div class="empBody">
-        <div class="rowA">
-          <div class="field"><label>Status</label>
-            <select id="st-${e.no}" onchange="calc('${e.no}')">
-              <option value="P" ${st==='P'?'selected':''}>Present</option>
-              <option value="A" ${st==='A'?'selected':''}>Absent</option>
-              <option value="H" ${st==='H'?'selected':''}>Half Day</option>
-              <option value="L" ${st==='L'?'selected':''}>Leave</option>
-              <option value="O" ${st==='O'?'selected':''}>Day Off</option>
-            </select>
-          </div>
-          <div class="field ot"><label>OT Hours</label>
+        <div class="rowTimes">
+          <div class="field"><label>In Time</label><select id="in-${e.no}" onchange="calc('${e.no}')">${timeOptions(r.in||loadedDefIn())}</select></div>
+          <div class="field"><label>Out Time</label><select id="out-${e.no}" onchange="calc('${e.no}')">${timeOptions(r.out||loadedDefOut())}</select></div>
+          <div class="field ot"><label>OT Hrs</label>
             <input id="ot-${e.no}" type="number" inputmode="decimal" value="${r.ot||''}" placeholder="0" oninput="calc('${e.no}')" onchange="calc('${e.no}')">
           </div>
         </div>
-        <div class="rowB">
-          <div class="field"><label>In Time</label><select id="in-${e.no}" onchange="calc('${e.no}')">${timeOptions(r.in||loadedDefIn())}</select></div>
-          <div class="field"><label>Out Time</label><select id="out-${e.no}" onchange="calc('${e.no}')">${timeOptions(r.out||loadedDefOut())}</select></div>
-        </div>
         <div class="field note"><label>Note / Remarks</label>
-          <textarea id="note-${e.no}" oninput="calc('${e.no}')" placeholder="Type note">${escHTML(r.note||'')}</textarea>
+          <textarea id="note-${e.no}" oninput="calc('${e.no}')" placeholder="Add a note…">${escHTML(r.note||'')}</textarea>
         </div>
       </div>
     </div>`;
   }).join('');
   updateDayStrip();
+  updateSaveBar();
   syncCardToggleBtn();
 }
+/* Live employee search */
+function filterEmps(v){_empFilter=v||'';renderCards();}
+function clearEmpFilter(){_empFilter='';const i=document.getElementById('empSearch');if(i)i.value='';renderCards();}
 /* ENHANCEMENT: collapsible cards */
 function toggleCard(no){
   const el=document.getElementById('card-'+no);
@@ -1314,12 +1615,123 @@ function updateDayStrip(){
   document.getElementById('dayStrip').innerHTML=html;
 }
 
+/* ── STICKY SAVE BAR (always-visible save status) ───────────── */
+function updateSaveBar(){
+  const bar=document.getElementById('saveBar');if(!bar)return;
+  const lbl=document.getElementById('saveBarLabel');
+  const data=day();
+  const unsaved=employees.filter(e=>!data[e.no]).length;
+  if(_dirty||unsaved>0){
+    bar.classList.add('dirty');
+    lbl.textContent=_dirty?'● Unsaved changes':`● ${unsaved} not saved`;
+  }else{
+    bar.classList.remove('dirty');
+    const now=new Date();
+    lbl.textContent='✓ All saved · '+pad(now.getHours())+':'+pad(now.getMinutes());
+  }
+}
+function saveBarSave(){flushPending();saveDay(true);updateSaveBar();}
+
+/* ── BACKUP REMINDER ────────────────────────────────────────── */
+function checkBackupReminder(){
+  const bar=document.getElementById('backupReminder');if(!bar)return;
+  const last=localStorage.getItem(LAST_BACKUP_DL_KEY)||'';
+  let days=Infinity;
+  if(last){const diff=Date.now()-new Date(last).getTime();days=Math.floor(diff/86400000);}
+  if(days>=7){
+    document.getElementById('backupReminderText').textContent=
+      last?`⚠ Last off-device backup was ${days} day${days===1?'':'s'} ago`:'⚠ You haven’t saved an off-device backup yet';
+    bar.classList.add('show');
+  }else{bar.classList.remove('show');}
+}
+function dismissBackupReminder(){document.getElementById('backupReminder').classList.remove('show');}
+
+/* ── FIND MISSING DAYS ──────────────────────────────────────── */
+let _gapMonth=today().slice(0,7);
+function isoDate(y,m,d){return `${y}-${pad(m)}-${pad(d)}`}
+/* Working days in `month` (YYYY-MM), on/before today, with NO saved records */
+function findMissingDays(month){
+  const [y,m]=month.split('-').map(Number);
+  const last=new Date(y,m,0).getDate();
+  const tdy=today();
+  const out=[];
+  for(let d=1;d<=last;d++){
+    const iso=isoDate(y,m,d);
+    if(iso>tdy)break;
+    if(isWeekend(iso))continue;
+    const rec=db.days[iso];
+    if(!rec||Object.keys(rec).length===0)out.push(iso);
+  }
+  return out;
+}
+function openGapFinder(){_gapMonth=key().slice(0,7);renderGapFinder();document.getElementById('gapModal').classList.add('show');}
+function gapShift(n){const [y,m]=_gapMonth.split('-').map(Number);const d=new Date(y,m-1+n,1);_gapMonth=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;renderGapFinder();}
+function renderGapFinder(){
+  document.getElementById('gapMonthLabel').textContent=monthHuman(_gapMonth);
+  const miss=findMissingDays(_gapMonth);
+  const host=document.getElementById('gapList');
+  const fillBtn=document.getElementById('gapFillAllBtn');
+  if(!miss.length){
+    host.innerHTML=`<div style="text-align:center;color:#1b6b35;font-weight:800;padding:22px 8px">✓ No missing working days in ${monthHuman(_gapMonth)}</div>`;
+    fillBtn.disabled=true;fillBtn.style.opacity=.5;return;
+  }
+  fillBtn.disabled=false;fillBtn.style.opacity=1;
+  host.innerHTML=miss.map(d=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--line)">
+      <span style="flex:1;font-size:12.5px;font-weight:700;color:#8a4000">⚠ ${humanDate(d)}</span>
+      <button class="btnSoft" style="min-height:28px;font-size:11px!important;padding:3px 9px" onclick="fillGapDay('${d}')">Mark present</button>
+      <button class="btnSoft" style="min-height:28px;font-size:11px!important;padding:3px 9px" onclick="gotoGapDay('${d}')">Open</button>
+    </div>`).join('')
+    +`<div style="font-size:11px;color:var(--muted);padding:8px 4px">${miss.length} missing working day${miss.length===1?'':'s'} in ${monthHuman(_gapMonth)}.</div>`;
+}
+/* Fill one date: every employee without a record gets Present (or Leave if booked) */
+function fillDayDefaults(date){
+  if(!db.days[date])db.days[date]={};
+  const d=db.days[date];let added=0;
+  employees.forEach(e=>{
+    if(!d[e.no]){
+      const lv=leaveForDate(e.no,date);
+      d[e.no]=lv
+        ?{status:'L',in:'',out:'',ot:0,dayVal:0,note:'On leave'+(lv.note?': '+lv.note:'')}
+        :{status:'P',in:loadedDefIn(),out:loadedDefOut(),ot:+(loadedDefOT()||0),dayVal:1,note:''};
+      added++;
+    }
+  });
+  return added;
+}
+function fillGapDay(date){
+  fillDayDefaults(date);
+  saveDB();
+  renderGapFinder();
+  showShareNotice('✓ '+humanDate(date)+' marked present');
+}
+function gotoGapDay(date){
+  document.getElementById('gapModal').classList.remove('show');
+  showPage('daily');setDate(date);
+  showShareNotice('Opened '+humanDate(date)+' — review and save');
+}
+function fillAllGaps(){
+  const miss=findMissingDays(_gapMonth);
+  if(!miss.length)return;
+  let total=0;miss.forEach(d=>total+=fillDayDefaults(d));
+  saveDB();renderGapFinder();
+  showShareNotice('✓ Marked present on '+miss.length+' day'+(miss.length===1?'':'s'));
+}
+
 /* ── SUMMARY ────────────────────────────────────────────────── */
+/* Resilient roster: current employees PLUS any empNo that has records in the
+   period (so history is never lost if someone is renamed away or removed). */
+function empNameOf(no){const e=employees.find(x=>x.no===no);return e?e.name:no;}
+function summaryRoster(dateKeys){
+  const seen=new Map();
+  employees.forEach(e=>seen.set(e.no,e.name));
+  (dateKeys||[]).forEach(d=>{const day=db.days[d];if(day)Object.keys(day).forEach(no=>{if(!seen.has(no))seen.set(no,no);});});
+  return [...seen.entries()].map(([no,name])=>({no,name}));
+}
 /* Fix: dayRows only includes employees with a real saved record for that date.
    Employees with no saved entry get status/dayVal=0 so they don't inflate Days count */
 function dayRows(d){
   const saved=db.days[d]||{};
-  return employees.map(e=>{
+  return summaryRoster([d]).map(e=>{
     const r=saved[e.no];
     return {date:d,empNo:e.no,name:e.name,
       status:r?r.status:'',in:r?r.in:'',out:r?r.out:'',
@@ -1327,12 +1739,43 @@ function dayRows(d){
   });
 }
 function monthlySummary(m){
-  const s={};employees.forEach(e=>s[e.no]={empNo:e.no,name:e.name,days:0,ot:0,p:0,h:0,a:0,l:0});
-  Object.keys(db.days).filter(d=>d.startsWith(m)).forEach(d=>employees.forEach(e=>{
+  const dateKeys=Object.keys(db.days).filter(d=>d.startsWith(m));
+  const roster=summaryRoster(dateKeys);
+  const s={};roster.forEach(e=>s[e.no]={empNo:e.no,name:e.name,days:0,ot:0,p:0,h:0,a:0,l:0});
+  dateKeys.forEach(d=>roster.forEach(e=>{
     const r=(db.days[d]||{})[e.no];
     if(r){s[e.no].days+=+(r.dayVal||0);s[e.no].ot+=+(r.ot||0);
       if(r.status==='P')s[e.no].p++;if(r.status==='H')s[e.no].h++;
       if(r.status==='A')s[e.no].a++;if(r.status==='L')s[e.no].l++}
+  }));
+  return Object.values(s);
+}
+/* ── SALARY PERIOD (15th → 14th of next month, half-open [15th, next 15th)) ──
+   A "salary month" is named after the month it STARTS in:
+   15 May → 14 Jun  =  "May" salary period.
+   Every calendar day falls in exactly one period — the 15th starts a new one. */
+function salaryPeriod(d){
+  const dt=new Date(d+'T12:00:00');
+  let y=dt.getFullYear(), m=dt.getMonth();
+  if(dt.getDate()<15){m--;if(m<0){m=11;y--;}}      /* before the 15th → belongs to previous 15th-start */
+  const iso=(yy,mm,dd)=>`${yy}-${pad(mm+1)}-${pad(dd)}`;
+  const start=iso(y,m,15);                          /* inclusive first day */
+  const ny=m===11?y+1:y, nm=(m+1)%12;
+  const endEx=iso(ny,nm,15);                         /* exclusive — first day of next period */
+  const lastDt=new Date(ny,nm,14);                  /* inclusive last day, handles month lengths */
+  const end=iso(lastDt.getFullYear(),lastDt.getMonth(),lastDt.getDate());
+  return {start,endEx,end,name:iso(y,m,1).slice(0,7)};
+}
+function dayMon(d){const x=new Date(d+'T12:00:00');return x.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
+function salarySummary(p){
+  const dateKeys=Object.keys(db.days).filter(d=>d>=p.start&&d<p.endEx);
+  const roster=summaryRoster(dateKeys);
+  const s={};roster.forEach(e=>s[e.no]={empNo:e.no,name:e.name,days:0,ot:0,p:0,h:0,a:0,l:0,o:0});
+  dateKeys.forEach(d=>roster.forEach(e=>{
+    const r=(db.days[d]||{})[e.no];
+    if(r){s[e.no].days+=+(r.dayVal||0);s[e.no].ot+=+(r.ot||0);
+      if(r.status==='P')s[e.no].p++;if(r.status==='H')s[e.no].h++;
+      if(r.status==='A')s[e.no].a++;if(r.status==='L')s[e.no].l++;if(r.status==='O')s[e.no].o++}
   }));
   return Object.values(s);
 }
@@ -1343,8 +1786,9 @@ function weekDates(d){
 }
 function weeklySummary(d){
   const dates=weekDates(d),s={};
-  employees.forEach(e=>s[e.no]={empNo:e.no,name:e.name,days:0,ot:0,p:0,h:0,a:0,l:0});
-  dates.forEach(dt=>employees.forEach(e=>{
+  const roster=summaryRoster(dates);
+  roster.forEach(e=>s[e.no]={empNo:e.no,name:e.name,days:0,ot:0,p:0,h:0,a:0,l:0});
+  dates.forEach(dt=>roster.forEach(e=>{
     const r=(db.days[dt]||{})[e.no];
     if(r){s[e.no].days+=+(r.dayVal||0);s[e.no].ot+=+(r.ot||0);
       if(r.status==='P')s[e.no].p++;if(r.status==='H')s[e.no].h++;
@@ -1354,8 +1798,10 @@ function weeklySummary(d){
 }
 function showSummary(type){
   currentSummary=type;
-  ['Daily','Weekly','Monthly'].forEach(x=>document.getElementById('sum'+x).classList.toggle('active',x.toLowerCase()===type));
-  let label=type==='monthly'?monthHuman(monthKey()):type==='weekly'?`${weekDates(key())[0]} → ${weekDates(key())[6]}`:humanDate(key());
+  ['Daily','Weekly','Monthly','Salary'].forEach(x=>document.getElementById('sum'+x).classList.toggle('active',x.toLowerCase()===type));
+  let label;
+  if(type==='salary'){const sp=salaryPeriod(key());label=`${monthHuman(sp.name)} · ${dayMon(sp.start)} – ${dayMon(sp.end)}`;}
+  else label=type==='monthly'?monthHuman(monthKey()):type==='weekly'?`${weekDates(key())[0]} → ${weekDates(key())[6]}`:humanDate(key());
   document.getElementById('summaryPeriod').innerHTML=`<div class="summaryControl"><button class="btnSoft" onclick="shiftSummary(-1)">‹</button><button class="periodDisplay" onclick="openCalendar('summary')">${label}</button><button class="btnSoft" onclick="shiftSummary(1)">›</button></div>`;
   let html='';
   if(type==='daily'){
@@ -1376,6 +1822,16 @@ function showSummary(type){
           a=rows.reduce((x,r)=>x+r.a,0),
           ot=rows.reduce((x,r)=>x+r.ot,0);
     html=metrics(['✅ Present',p],['❌ Absent',a],['⏰ Half Day',h],['⏱ OT Hrs',ot.toFixed(1)])+table(['Employee','Present','Half','Absent','Leave','OT'],rows.map(r=>[short(r.name),r.p,r.h,r.a,r.l,r.ot.toFixed(1)]));
+  }else if(type==='salary'){
+    const sp=salaryPeriod(key()),rows=salarySummary(sp),
+          p=rows.reduce((x,r)=>x+r.p,0),
+          h=rows.reduce((x,r)=>x+r.h,0),
+          a=rows.reduce((x,r)=>x+r.a,0),
+          tot=rows.reduce((x,r)=>x+r.days,0),
+          ot=rows.reduce((x,r)=>x+r.ot,0);
+    html=metrics(['✅ Present',p],['❌ Absent',a],['📅 Pay Days',tot.toFixed(1)],['⏱ OT Hrs',ot.toFixed(1)])+
+         `<div style="font-size:11px;color:var(--muted);margin:2px 0 4px;text-align:right">Salary period ${dayMon(sp.start)} – ${dayMon(sp.end)} · Pay Days feed payroll</div>`+
+         table(['Employee','Pay Days','Present','Half','Absent','Leave','OT'],rows.map(r=>[short(r.name),r.days,r.p,r.h,r.a,r.l,r.ot.toFixed(1)]));
   }else{
     const rows=monthlySummary(monthKey()),
           p=rows.reduce((x,r)=>x+r.p,0),
@@ -1546,32 +2002,35 @@ function renderLeaveList(){
 /* ── RESTORE (ENHANCEMENT) ──────────────────────────────────── */
 function openRestore(){document.getElementById('restoreModal').classList.add('show')}
 function closeRestore(){document.getElementById('restoreModal').classList.remove('show');document.getElementById('restoreInput').value=''}
+/* Shared restore applier — used by paste-restore and Drive-restore.
+   Snapshots current data to undo first, so a wrong restore is reversible. */
+function applyRestorePayload(parsed){
+  let restoredDb=null, restoredEmp=null;
+  if(parsed&&parsed.data&&typeof parsed.data.days==='object'){
+    restoredDb=parsed.data;
+    if(Array.isArray(parsed.employees)&&parsed.employees.length)restoredEmp=parsed.employees;
+  }else if(parsed&&typeof parsed.days==='object'){
+    restoredDb=parsed;
+  }else return false;
+  undoHistory.push(JSON.parse(JSON.stringify(db)));
+  if(undoHistory.length>UNDO_LIMIT)undoHistory.shift();
+  db=restoredDb;if(!db.leaves)db.leaves=[];
+  if(restoredEmp){employees=restoredEmp;safeSetEmployees();}
+  safePersist();
+  autoLocalBackup();
+  try{renderLeaveEmpOptions()}catch(e){}
+  renderCards();renderLeave();showSummary(currentSummary);
+  showUndoBar();
+  return true;
+}
 function doRestore(){
   const raw=document.getElementById('restoreInput').value.trim();
   if(!raw){showShareNotice('Please paste a backup JSON first.');return}
   try{
     const parsed=JSON.parse(raw);
-    /* Support new format: {exportedAt, version, employees, data:{days,leaves}} */
-    /* AND old format: {days:{...}, leaves:[...]} */
-    let restoredDb, restoredEmp=null;
-    if(parsed.data&&typeof parsed.data.days==='object'){
-      restoredDb=parsed.data;
-      if(Array.isArray(parsed.employees)&&parsed.employees.length)restoredEmp=parsed.employees;
-    }else if(typeof parsed.days==='object'){
-      restoredDb=parsed;
-    }else{
-      showShareNotice('Invalid backup — could not find attendance data.');return;
-    }
-    db=restoredDb;if(!db.leaves)db.leaves=[];
-    if(restoredEmp){
-      employees=restoredEmp;
-      localStorage.setItem(EMPSTORE,JSON.stringify(employees));
-    }
-    localStorage.setItem(STORE,JSON.stringify(db));
-    queueMicrotask(()=>mirrorAllToIDB());
-    autoLocalBackup(); /* snapshot this restore as a backup point */
+    if(!applyRestorePayload(parsed)){showShareNotice('Invalid backup — could not find attendance data.');return;}
+    const restoredEmp=Array.isArray(parsed.employees)&&parsed.employees.length;
     closeRestore();
-    renderLeaveEmpOptions();renderCards();renderLeave();showSummary(currentSummary);
     showShareNotice('✅ Data restored successfully'+(restoredEmp?' (employees also restored)':''));
   }catch(e){showShareNotice('Could not parse JSON. Make sure you pasted the full backup file.')}
 }
@@ -1587,9 +2046,9 @@ async function shareFile(name,content,type){
 }
 async function backup(){
   saveDay(false);
-  const payload=JSON.stringify({exportedAt:new Date().toISOString(),version:'v30',employees,data:db},null,2);
+  const payload=JSON.stringify({exportedAt:new Date().toISOString(),version:'v40',employees,data:db},null,2);
   await shareFile(`GardenGrow_Backup_${today()}.json`,payload,'application/json');
-  localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());
+  localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());checkBackupReminder();
 }
 function csvEsc(v){return `"${String(v??'').replace(/"/g,'""')}"`}
 function xlsEsc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -1667,6 +2126,9 @@ async function shareSummaryPdf(){
   else if(currentSummary==='weekly'){
     const w=weeklySummary(key());
     await shareFile(`GardenGrow_Weekly_${w.dates[0]}_${w.dates[6]}.pdf`,makePdf(`Weekly Summary - ${w.dates[0]} to ${w.dates[6]}`,['Employee','Days','OT','Present','Half','Absent','Leave'],w.rows.map(r=>[short(r.name),r.days,r.ot.toFixed(1),r.p,r.h,r.a,r.l])),'application/pdf');
+  }else if(currentSummary==='salary'){
+    const sp=salaryPeriod(key());
+    await shareFile(`GardenGrow_Salary_${sp.start}_to_${sp.end}.pdf`,makePdf(`Salary Period - ${dayMon(sp.start)} to ${dayMon(sp.end)} (${monthHuman(sp.name)})`,['Employee','Pay Days','OT','Present','Half','Absent','Leave'],salarySummary(sp).map(r=>[short(r.name),r.days,r.ot.toFixed(1),r.p,r.h,r.a,r.l])),'application/pdf');
   }else{
     await shareFile(`GardenGrow_Monthly_${monthKey()}.pdf`,makePdf(`Monthly Summary - ${monthKey()}`,['Employee','Days','OT','Present','Half','Absent','Leave'],monthlySummary(monthKey()).map(r=>[short(r.name),r.days,r.ot.toFixed(1),r.p,r.h,r.a,r.l])),'application/pdf');
   }
@@ -1712,8 +2174,7 @@ function hideUndoBar(){
 function undoSave(){
   if(!undoHistory.length){showShareNotice('Nothing to undo');return}
   db=undoHistory.pop();
-  localStorage.setItem(STORE,JSON.stringify(db));
-  queueMicrotask(()=>mirrorAllToIDB());
+safePersist();
   renderCards();renderLeave();showSummary(currentSummary);
   const remaining=undoHistory.length;
   if(remaining>0)showUndoBar();
@@ -1749,8 +2210,10 @@ function markAllPresentMonth(){
   const [y,mo]=m.split('-').map(Number);
   const daysInMonth=new Date(y,mo,0).getDate();
   let count=0;
+  const tdy=today();
   for(let d=1;d<=daysInMonth;d++){
     const dateStr=`${m}-${pad(d)}`;
+    if(dateStr>tdy)break;
     if(isWeekend(dateStr))continue;
     if(!db.days[dateStr])db.days[dateStr]={};
     employees.forEach(e=>{
@@ -1831,7 +2294,7 @@ function saveEmpMgr(){
     const inp=document.getElementById('emgr-name-'+i);
     if(inp)e.name=inp.value.trim().toUpperCase()||e.name;
   });
-  localStorage.setItem(EMPSTORE,JSON.stringify(employees));
+  safeSetEmployees();
   closeEmpMgr();
   renderLeaveEmpOptions();renderCards();
   showShareNotice('Employee list saved ✓');
@@ -2088,10 +2551,158 @@ async function _gsWriteData(sid){
   }).catch(()=>{});/* non-critical */
 }
 
+/* ── GOOGLE DRIVE BACKUP & AUTO-SYNC ────────────────────────── */
+const DRIVE_FILE_KEY='gg_drive_fileid_v1', DRIVE_LASTSYNC_KEY='gg_drive_lastsync_v1', DRIVE_AUTOSYNC_KEY='gg_drive_autosync_v1';
+let driveTokenClient=null, driveToken=null, driveTokenExp=0, _driveSyncTimer=null, _driveSyncing=false;
+
+function driveConfigured(){return !!localStorage.getItem(GS_CLIENT_KEY);}
+function driveAutoOn(){return driveConfigured() && localStorage.getItem(DRIVE_AUTOSYNC_KEY)!=='off';}
+function driveBackupPayload(){return JSON.stringify({exportedAt:new Date().toISOString(),version:'v42',employees,data:db},null,2);}
+function driveLastSyncHuman(){const t=localStorage.getItem(DRIVE_LASTSYNC_KEY);if(!t)return'';try{return new Date(t).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch(e){return''}}
+
+function _driveLoadLib(){
+  return new Promise((res,rej)=>{
+    if(window.google&&window.google.accounts&&window.google.accounts.oauth2){res();return;}
+    const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';
+    s.onload=()=>res();s.onerror=()=>rej(new Error('Could not load Google sign-in (check internet)'));
+    document.head.appendChild(s);
+  });
+}
+/* Get an access token. interactive=true may show a Google popup (needs a tap);
+   interactive=false attempts silent and rejects quietly if it can't. */
+function driveGetToken(interactive){
+  return new Promise(async (resolve,reject)=>{
+    if(driveToken&&Date.now()<driveTokenExp-60000){resolve(driveToken);return;}
+    if(gsToken){resolve(gsToken);return;} /* reuse a live Sheets token if present */
+    const cid=localStorage.getItem(GS_CLIENT_KEY);
+    if(!cid){reject(new Error('Connect Google first'));return;}
+    try{
+      await _driveLoadLib();
+      if(!driveTokenClient){driveTokenClient=google.accounts.oauth2.initTokenClient({client_id:cid,scope:GS_SCOPES,callback:()=>{}});}
+      let settled=false;
+      driveTokenClient.callback=(resp)=>{
+        if(resp.error){if(!settled){settled=true;reject(new Error(resp.error))}return;}
+        driveToken=resp.access_token;driveTokenExp=Date.now()+((resp.expires_in||3600)*1000);
+        if(!settled){settled=true;resolve(driveToken)}
+      };
+      if(!interactive){setTimeout(()=>{if(!settled){settled=true;reject(new Error('silent-timeout'))}},4000);}
+      driveTokenClient.requestAccessToken({prompt:interactive?'select_account':''});
+    }catch(e){reject(e)}
+  });
+}
+/* Upload (or update) a single rolling backup file in the user's Drive.
+   Drive keeps its own revision history, so past versions remain recoverable. */
+async function driveUploadWithToken(token,content){
+  const fileId=localStorage.getItem(DRIVE_FILE_KEY);
+  const meta={name:'GardenGrow_Attendance_Backup.json',mimeType:'application/json',description:'Garden Grow attendance backup (auto-synced)'};
+  const boundary='ggb'+Date.now();
+  const body=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`+JSON.stringify(meta)
+    +`\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n`+content+`\r\n--${boundary}--`;
+  const url=fileId
+    ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
+    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+  const r=await fetch(url,{method:fileId?'PATCH':'POST',
+    headers:{Authorization:'Bearer '+token,'Content-Type':`multipart/related; boundary=${boundary}`},body});
+  if(r.status===404&&fileId){localStorage.removeItem(DRIVE_FILE_KEY);return driveUploadWithToken(token,content);}
+  if(r.status===401){driveToken=null;throw new Error('Session expired — tap again to sign in');}
+  if(!r.ok)throw new Error('Drive error '+r.status);
+  const j=await r.json();
+  if(j&&j.id)localStorage.setItem(DRIVE_FILE_KEY,j.id);
+  localStorage.setItem(DRIVE_LASTSYNC_KEY,new Date().toISOString());
+  return j;
+}
+/* Manual one-tap backup to Drive (shows status, will sign in if needed) */
+async function backupToDriveNow(){
+  if(!driveConfigured()){openGSheets();showShareNotice('First connect Google (enter Client ID in this panel), then use “Back up to Drive”.');return;}
+  if(_driveSyncing)return;_driveSyncing=true;
+  try{
+    showShareNotice('☁ Backing up to Google Drive…');
+    saveDay(false);
+    const token=await driveGetToken(true);
+    await driveUploadWithToken(token,driveBackupPayload());
+    localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());checkBackupReminder();
+    if(localStorage.getItem(DRIVE_AUTOSYNC_KEY)===null)localStorage.setItem(DRIVE_AUTOSYNC_KEY,'on');
+    updateDriveStatus();
+    showShareNotice('✅ Backed up to Google Drive · '+driveLastSyncHuman());
+  }catch(e){showShareNotice('⚠ Drive backup failed: '+e.message);}
+  finally{_driveSyncing=false;}
+}
+/* Debounced background sync after edits (best-effort, silent) */
+function scheduleDriveSync(){
+  if(!driveAutoOn())return;
+  clearTimeout(_driveSyncTimer);
+  _driveSyncTimer=setTimeout(driveAutoSync,90000); /* 90s after last change */
+}
+async function driveAutoSync(){
+  if(!driveAutoOn()||_driveSyncing)return;
+  _driveSyncing=true;
+  try{
+    const token=await driveGetToken(false); /* silent only */
+    await driveUploadWithToken(token,driveBackupPayload());
+    localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());
+    updateDriveStatus();
+  }catch(e){/* silent: manual button remains the guarantee */}
+  finally{_driveSyncing=false;}
+}
+function toggleDriveAuto(on){
+  localStorage.setItem(DRIVE_AUTOSYNC_KEY,on?'on':'off');
+  updateDriveStatus();
+  if(on)scheduleDriveSync();
+}
+function updateDriveStatus(){
+  const s=document.getElementById('driveStatus');
+  if(s){
+    if(!driveConfigured())s.textContent='Not connected — connect Google to enable Drive backup.';
+    else{const ls=driveLastSyncHuman();s.textContent=ls?('Last Drive backup: '+ls):'Connected — not backed up yet.';}
+  }
+  const cb=document.getElementById('driveAutoChk');if(cb)cb.checked=driveAutoOn();
+}
+/* On app open: if connected + auto-on + last sync is stale (>8h), try a silent sync */
+function driveOpenSync(){
+  if(!driveAutoOn())return;
+  const t=localStorage.getItem(DRIVE_LASTSYNC_KEY);
+  const stale=!t||(Date.now()-new Date(t).getTime())>8*3600*1000;
+  if(stale)setTimeout(driveAutoSync,4000);
+}
+/* One-tap restore FROM Google Drive (two taps: preview, then confirm REPLACE) */
+let _driveRestorePending=false;
+async function restoreFromDriveNow(){
+  if(!driveConfigured()){openGSheets();showShareNotice('Connect Google first, then restore from Drive.');return;}
+  if(_driveSyncing)return;
+  try{
+    const token=await driveGetToken(true);
+    let fileId=localStorage.getItem(DRIVE_FILE_KEY);
+    if(!fileId){
+      const q=encodeURIComponent("name='GardenGrow_Attendance_Backup.json' and trashed=false");
+      const lr=await fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id,modifiedTime)&orderBy=modifiedTime desc',{headers:{Authorization:'Bearer '+token}});
+      const lj=await lr.json();
+      if(!lj.files||!lj.files.length){showShareNotice('No Drive backup found yet. Tap “Back up to Drive” first.');return;}
+      fileId=lj.files[0].id;localStorage.setItem(DRIVE_FILE_KEY,fileId);
+    }
+    const dr=await fetch('https://www.googleapis.com/drive/v3/files/'+fileId+'?alt=media',{headers:{Authorization:'Bearer '+token}});
+    if(dr.status===404){localStorage.removeItem(DRIVE_FILE_KEY);showShareNotice('Drive backup file was moved/deleted. Tap again to search.');return;}
+    if(!dr.ok)throw new Error('download '+dr.status);
+    const parsed=JSON.parse(await dr.text());
+    const data=(parsed.data&&parsed.data.days)?parsed.data:(parsed.days?parsed:null);
+    if(!data){showShareNotice('Drive file is not a valid backup.');return;}
+    const dcount=Object.keys(data.days||{}).length;let rec=0;Object.keys(data.days||{}).forEach(d=>rec+=Object.keys(data.days[d]||{}).length);
+    if(_driveRestorePending){
+      _driveRestorePending=false;
+      if(applyRestorePayload(parsed)){updateDriveStatus();showShareNotice('✅ Restored from Google Drive ('+dcount+' days · '+rec+' records). Undo is available if needed.');}
+    }else{
+      _driveRestorePending=true;
+      clearTimeout(window._drivePendT);window._drivePendT=setTimeout(()=>{_driveRestorePending=false},12000);
+      const when=parsed.exportedAt?new Date(parsed.exportedAt).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'unknown date';
+      showShareNotice(`⚠ Drive backup: ${dcount} days · ${rec} records (saved ${when}). Tap “Restore from Drive” again within 12s to REPLACE the data on this device.`);
+    }
+  }catch(e){showShareNotice('⚠ Drive restore failed: '+e.message);}
+}
+
 /* ── AUTO-BACKUP VIEWER ─────────────────────────────────────── */
 function openAutoBackups(){
   renderAutoBackupsList();
   updateStorageMeter();
+  updateDriveStatus();
   document.getElementById('autoBackupModal').classList.add('show');
 }
 
@@ -2137,8 +2748,7 @@ function restoreFromAutoBackup(stamp){
   if(window._restorePending===stamp){
     db=JSON.parse(JSON.stringify(data));
     if(!db.leaves)db.leaves=[];
-    localStorage.setItem(STORE,JSON.stringify(db));
-    queueMicrotask(()=>mirrorAllToIDB());
+    safePersist();
     document.getElementById('autoBackupModal').classList.remove('show');
     renderCards();renderLeave();showSummary(currentSummary);
     showShareNotice('✅ Restored from auto-backup: '+new Date(stamp.replace('T',' ')).toLocaleString('en-GB'));
@@ -2156,7 +2766,7 @@ function downloadBackupNow(){
   const filename=`GardenGrow_Backup_${today()}.json`;
   const content=JSON.stringify({
     exportedAt:new Date().toISOString(),
-    version:'v30',
+    version:'v32',
     employees,
     data:db
   },null,2);
@@ -2167,12 +2777,12 @@ function downloadBackupNow(){
     a.download=filename;
     document.body.appendChild(a);a.click();
     setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
-    localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());
+    localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());checkBackupReminder();
     showShareNotice('✅ Backup downloaded: '+filename);
   }catch(e){
     /* Fallback: use shareFile (Share API) */
     shareFile(filename,content,'application/json');
-    localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());
+    localStorage.setItem(LAST_BACKUP_DL_KEY,new Date().toISOString());checkBackupReminder();
   }
 }
 
@@ -2207,7 +2817,10 @@ function updateStorageMeter(){
   if(lbl)lbl.textContent=used+'KB / ~5MB ('+pct+'%)';
   if(hint){
     const backupCount=Object.keys(JSON.parse(localStorage.getItem(AUTOBACK)||'{}')).length;
-    hint.textContent=backupCount+' auto-backup point'+(backupCount!==1?'s':'')+' stored on this device.';
+    const dayKeys=Object.keys(db.days||{}).sort();
+    let recs=0;dayKeys.forEach(d=>recs+=Object.keys(db.days[d]||{}).length);
+    const range=dayKeys.length?(humanDate(dayKeys[0])+' → '+humanDate(dayKeys[dayKeys.length-1])):'no records yet';
+    hint.innerHTML=`<strong>Data health:</strong> ${dayKeys.length} days · ${recs} records · ${employees.length} employees · ${(db.leaves||[]).length} leave entries<br>Range: ${range}<br>${backupCount} auto-backup point${backupCount!==1?'s':''} on this device.`;
   }
 }
 
@@ -2215,7 +2828,7 @@ function updateStorageMeter(){
 async function bootstrap(){
   await hydrateStorage();
   initDark();
-  if(mobileCompactDefault())allCardsCollapsed=true;
+  allCardsCollapsed=true;
   init();
   /* Show last-saved time if data exists */
   const lsRaw=localStorage.getItem(STORE);
@@ -2223,6 +2836,8 @@ async function bootstrap(){
   checkExportReminder();
   /* Quota check with short delay so UI renders first */
   setTimeout(checkStorageQuota,3000);
+  driveOpenSync();
+  if(_recoveredCount>0)setTimeout(()=>showShareNotice('✓ Loaded your existing records from this device ('+_recoveredCount+' days)'),1200);
 }
 bootstrap();
 </script>
