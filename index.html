@@ -493,7 +493,7 @@ html,body{overscroll-behavior-y:none}
     <div class="hdrLeaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div>
     <div class="hdrText">
       <h1>Garden Grow</h1>
-      <div class="sub">Attendance &middot; Landscaping &amp; Gardening LLC <span id="verTag" class="verTag">v46</span></div>
+      <div class="sub">Attendance &middot; Landscaping &amp; Gardening LLC <span id="verTag" class="verTag">v47</span></div>
     </div>
     <button class="syncPill off" id="syncPill" onclick="openSync()">☁ Off</button>
     <button class="darkBtn" id="darkToggleBtn" onclick="toggleDark()">🌙 Dark</button>
@@ -730,12 +730,12 @@ html,body{overscroll-behavior-y:none}
 <div id="empMgrModal" class="modalOverlay">
   <div class="modalBox" style="width:min(460px,96vw)">
     <div class="modalTitle">👥 Employee Manager</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Edit names or add/remove employees. Changes apply immediately.</div>
+    <div id="empMgrNote" style="font-size:11.5px;color:var(--muted);margin-bottom:6px">Edit names or add/remove employees. Changes apply immediately.</div>
     <div id="empMgrList" class="empMgrList"></div>
-    <button class="btnSoft" style="width:100%;margin-top:6px;font-size:11px!important;min-height:32px" onclick="addEmpRow()">+ Add Employee</button>
+    <button id="empMgrAdd" class="btnSoft" style="width:100%;margin-top:6px;font-size:11px!important;min-height:32px" onclick="addEmpRow()">+ Add Employee</button>
     <div class="modalActions" style="margin-top:8px">
-      <button onclick="saveEmpMgr()">💾 Save Changes</button>
-      <button class="btnSoft" onclick="closeEmpMgr()">Cancel</button>
+      <button id="empMgrSave" onclick="saveEmpMgr()">💾 Save Changes</button>
+      <button class="btnSoft" onclick="closeEmpMgr()">Close</button>
     </div>
   </div>
 </div>
@@ -2348,8 +2348,21 @@ function openEmpMgr(){
   document.getElementById('empMgrModal').classList.add('show');
 }
 function closeEmpMgr(){document.getElementById('empMgrModal').classList.remove('show')}
+/* v47: when connected to the Google Sheet, the employee list is managed in the
+   PAYROLL app (Employees tab → "📲 In Attendance app"). It arrives here
+   automatically, so it is shown read-only to keep both apps identical. */
+function empListManagedByPayroll(){ return !!(typeof syncUrl==='function' && syncUrl()); }
 function renderEmpMgrList(){
   const box=document.getElementById('empMgrList');if(!box)return;
+  const managed=empListManagedByPayroll();
+  const note=document.getElementById('empMgrNote');
+  if(note)note.innerHTML=managed?'🔒 <b>Managed in the Payroll app</b> (Employees tab → tick “📲 In Attendance app”). This list updates automatically from the Google Sheet — same names and EMP numbers as Payroll.':'Edit names or add/remove employees. Changes apply immediately.';
+  ['empMgrAdd','empMgrSave'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=managed?'none':'';});
+  if(managed){
+    box.innerHTML=employees.map(e=>`<div class="empMgrItem"><span class="empNoTag">${escHTML(e.no)}</span><span style="flex:1;font-weight:700;font-size:13px;padding:6px 4px">${escHTML(e.name)}</span></div>`).join('')+
+      `<div style="font-size:11px;color:var(--muted);margin-top:6px">${employees.length} employees</div>`;
+    return;
+  }
   box.innerHTML=employees.map((e,i)=>`
     <div class="empMgrItem">
       <span class="empNoTag">${escHTML(e.no)}</span>
@@ -2369,6 +2382,7 @@ function removeEmpRow(i){
   employees.splice(i,1);renderEmpMgrList();
 }
 function saveEmpMgr(){
+  if(empListManagedByPayroll()){closeEmpMgr();return;}
   employees.forEach((e,i)=>{
     const inp=document.getElementById('emgr-name-'+i);
     if(inp)e.name=inp.value.trim().toUpperCase()||e.name;
@@ -2636,7 +2650,7 @@ let driveTokenClient=null, driveToken=null, driveTokenExp=0, _driveSyncTimer=nul
 
 function driveConfigured(){return !!localStorage.getItem(GS_CLIENT_KEY);}
 function driveAutoOn(){return driveConfigured() && localStorage.getItem(DRIVE_AUTOSYNC_KEY)!=='off';}
-function driveBackupPayload(){return JSON.stringify({exportedAt:new Date().toISOString(),version:'v45',employees,data:db},null,2);}
+function driveBackupPayload(){return JSON.stringify({exportedAt:new Date().toISOString(),version:'v47',employees,data:db},null,2);}
 function driveLastSyncHuman(){const t=localStorage.getItem(DRIVE_LASTSYNC_KEY);if(!t)return'';try{return new Date(t).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch(e){return''}}
 
 function _driveLoadLib(){
@@ -3076,7 +3090,7 @@ function _afterRemoteChange(empChanged){
     /* undo must never "undo" someone else's change */
     undoHistory=[];_undoBaseline=JSON.parse(JSON.stringify(db));
     try{hideUndoBar();}catch(e){}
-    if(empChanged){try{renderLeaveEmpOptions();}catch(e){}}
+    if(empChanged){try{renderLeaveEmpOptions();}catch(e){} try{showShareNotice('👥 Employee list updated from Payroll ('+employees.length+' employees)');}catch(e){}}
     try{renderCards();}catch(e){}
     try{renderLeave();}catch(e){}
     try{if(document.getElementById('summaryPage').classList.contains('active'))showSummary(currentSummary);}catch(e){}
@@ -3178,7 +3192,7 @@ function saveSyncSettings(){
   renderSyncStatus();fillSyncModal();
   if(syncOn())syncNow('settings').then(ok=>{
     if(_syncState.err==='WRONG_PIN')showShareNotice('🔴 Wrong PIN — please check it');
-    else if(ok)showShareNotice('✅ Connected to Google Sheet');
+    else if(ok){showShareNotice('✅ Connected to Google Sheet');setTimeout(closeSync,1200);}
   });
 }
 function initCloudSync(){
