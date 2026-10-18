@@ -6,7 +6,7 @@
    • Never touches attendance data (localStorage / IndexedDB) and never caches
      the Google Sheet sync calls.
 */
-const CACHE = 'gg-attendance-v50';
+const CACHE = 'gg-attendance-v51';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
