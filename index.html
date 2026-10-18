@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Garden Grow Attendance v45</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Garden Grow Attendance</title>
 <meta name="theme-color" content="#153d29">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,62 +14,11 @@
 <meta name="apple-mobile-web-app-title" content="GG Attendance">
 <meta name="application-name" content="GG Attendance">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%2296%22%20fill%3D%22%23153d29%22%2F%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M128%20352h256v48H128zm32-192h48v192h-48zm80%2096h48v96h-48zm80-64h48v160h-48z%22%2F%3E%3C%2Fsvg%3E">
-<script>
-(function(){
-  /* ── Generate PNG icon at requested size using Canvas ── */
-  function genPNG(size){
-    try{
-      var c=document.createElement('canvas');c.width=c.height=size;
-      var x=c.getContext('2d');if(!x)return null;
-      var r=size*0.1875;
-      /* Rounded-rect background #153d29 */
-      x.fillStyle='#153d29';
-      x.beginPath();
-      x.moveTo(r,0);x.lineTo(size-r,0);x.arcTo(size,0,size,r,r);
-      x.lineTo(size,size-r);x.arcTo(size,size,size-r,size,r);
-      x.lineTo(r,size);x.arcTo(0,size,0,size-r,r);
-      x.lineTo(0,r);x.arcTo(0,0,r,0,r);
-      x.closePath();x.fill();
-      /* White bar-chart bars */
-      x.fillStyle='#fff';
-      var u=size/16;
-      x.fillRect(u*2.5, u*9,   u*2.2, u*5.5); /* bar 1 */
-      x.fillRect(u*5.9, u*6,   u*2.2, u*8.5); /* bar 2 */
-      x.fillRect(u*9.3, u*7.5, u*2.2, u*7);   /* bar 3 */
-      x.fillRect(u*12.7,u*4.5, u*2.2, u*10);  /* bar 4 */
-      x.fillRect(u*2,   u*14,  u*12,  u*0.6); /* baseline */
-      return c.toDataURL('image/png');
-    }catch(e){return null}
-  }
-  var svg='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%2296%22%20fill%3D%22%23153d29%22%2F%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M128%20352h256v48H128zm32-192h48v192h-48zm80%2096h48v96h-48zm80-64h48v160h-48z%22%2F%3E%3C%2Fsvg%3E';
-  var p192=genPNG(192), p512=genPNG(512);
-  var icons=[];
-  if(p512)icons.push({src:p512,sizes:'512x512',type:'image/png',purpose:'any maskable'});
-  if(p192)icons.push({src:p192,sizes:'192x192',type:'image/png',purpose:'any'});
-  icons.push({src:svg,sizes:'any',type:'image/svg+xml',purpose:'any maskable'});
-  var m={
-    name:'Garden Grow Attendance',short_name:'GG Attendance',
-    description:'Daily attendance, summaries, and annual leave — data stored on this device.',
-    start_url:location.href.split('?')[0],scope:'./',display:'standalone',
-    orientation:'portrait-primary',background_color:'#f3f6f2',theme_color:'#153d29',
-    icons:icons,
-    screenshots:[
-      {label:'Daily Attendance',form_factor:'narrow'},
-      {label:'Monthly Summary',form_factor:'narrow'}
-    ]
-  };
-  try{
-    var bl=new Blob([JSON.stringify(m)],{type:'application/manifest+json'});
-    var lk=document.createElement('link');lk.rel='manifest';lk.href=URL.createObjectURL(bl);
-    document.head.appendChild(lk);
-    /* Apple touch icon — use 192px PNG if available, else SVG */
-    var ati=document.createElement('link');ati.rel='apple-touch-icon';ati.href=p192||svg;
-    document.head.appendChild(ati);
-    /* Store p192 globally so sw.js download can include it */
-    window._ggIcon192=p192;window._ggIcon512=p512;
-  }catch(e){}
-})();
-</script>
+<!-- v46: real manifest + icon files (uploaded next to index.html on GitHub).
+     The old in-page generated manifest was not accepted as a proper installable
+     app by Android Chrome and is ignored by iPhone. -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 /* ── DESIGN TOKENS ─────────────────────────────────────────── */
 :root{
@@ -514,6 +463,26 @@ html.dark .tabGrid button{color:#7a937f!important}
 html.dark .tabGrid button.active{color:#7dbf8c!important}
 html.dark .tabGrid button:active{background:#1a2f22!important}
 html.dark .dayStrip{background:#16271b;border-color:#21402b}
+
+/* ── v46: cloud sync pill + banner ── */
+.syncPill{flex-shrink:0;min-height:32px!important;padding:5px 10px!important;border-radius:9px!important;font-size:11.5px!important;font-weight:800!important;
+  border:1px solid rgba(255,255,255,.35)!important;background:rgba(255,255,255,.12)!important;color:#fff!important;white-space:nowrap}
+.syncPill.ok{background:rgba(120,220,150,.25)!important}
+.syncPill.warn{background:#c98a12!important;border-color:#c98a12!important}
+.syncPill.bad{background:#b3261e!important;border-color:#b3261e!important}
+.syncPill.busy{background:rgba(255,255,255,.25)!important}
+.syncBanner{display:none;position:sticky;top:0;z-index:60;padding:9px 14px;font-size:13px;font-weight:800;text-align:center;color:#fff;cursor:pointer;line-height:1.3}
+.syncBanner.show{display:block}
+.syncBanner.warn{background:#c98a12}.syncBanner.bad{background:#b3261e}.syncBanner.busy{background:#2d6a4f}
+.syncBanner.busy::after{content:"";display:block;height:3px;margin:6px auto 0;max-width:260px;border-radius:3px;
+  background:linear-gradient(90deg,rgba(255,255,255,.25) 0%,#fff 50%,rgba(255,255,255,.25) 100%);background-size:200% 100%;animation:ggbar 1.1s linear infinite}
+@keyframes ggbar{from{background-position:200% 0}to{background-position:0 0}}
+.installBanner{display:none;align-items:center;gap:8px;background:#153d29;color:#fff;padding:10px 12px;font-size:13px;font-weight:700}
+.installBanner.show{display:flex}.installBanner span{flex:1}
+.installBanner button{min-height:36px!important;padding:6px 14px!important;border-radius:9px!important;font-weight:800!important;font-size:13px!important}
+.installBanner .ok{background:#fff!important;color:#153d29!important}.installBanner .no{background:transparent!important;color:#fff!important;opacity:.75}
+/* app feel: no pull-to-refresh / bounce reloading the page */
+html,body{overscroll-behavior-y:none}
 </style>
 </head>
 <body>
@@ -524,11 +493,18 @@ html.dark .dayStrip{background:#16271b;border-color:#21402b}
     <div class="hdrLeaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div>
     <div class="hdrText">
       <h1>Garden Grow</h1>
-      <div class="sub">Attendance &middot; Landscaping &amp; Gardening LLC <span id="verTag" class="verTag">v45</span></div>
+      <div class="sub">Attendance &middot; Landscaping &amp; Gardening LLC <span id="verTag" class="verTag">v46</span></div>
     </div>
+    <button class="syncPill off" id="syncPill" onclick="openSync()">☁ Off</button>
     <button class="darkBtn" id="darkToggleBtn" onclick="toggleDark()">🌙 Dark</button>
   </div>
 </header>
+<div id="syncBanner" class="syncBanner" onclick="openSync()"></div>
+<div id="installBanner" class="installBanner">
+  <span id="installText">📲 Install Attendance as an app on this phone</span>
+  <button id="installOk" class="ok" onclick="doInstall()">Install</button>
+  <button class="no" onclick="dismissInstall()">✕</button>
+</div>
 
 <!-- TABS -->
 <!-- Sticky save status bar (daily page) -->
@@ -590,7 +566,7 @@ html.dark .dayStrip{background:#16271b;border-color:#21402b}
           <button class="btnGold" onclick="backup()">Backup JSON</button>
           <button class="btnGold" onclick="openRestore()">Restore</button>
           <button class="btnSoft" onclick="openAutoBackups()">🗂 View Backups</button>
-          <button class="btnSoft" onclick="openGSheets()">📊 Google Sheets</button>
+          <button class="btnGold" onclick="openSync()">☁ Cloud Sync</button>
           <button class="btnGold" onclick="exportAllExcel()">Excel</button>
           <button class="btnSoft" onclick="exportPayrollCSV()">Payroll CSV</button>
         </div>
@@ -605,7 +581,7 @@ html.dark .dayStrip{background:#16271b;border-color:#21402b}
           <button class="btnSoft" onclick="openEmpDefModal()">⏰ Emp Defaults</button>
           <button class="btnSoft" onclick="markAllPresentMonth()">✅ All Present Month</button>
           <button class="btnSoft" onclick="promptInstallApp()">📲 Install app</button>
-          <button class="btnSoft" onclick="downloadSwJs()">⚙ Download sw.js</button>
+          <button class="btnSoft" onclick="forceUpdateApp()">🔄 Update app now</button>
         </div>
       </div>
       <!-- Last saved timestamp -->
@@ -932,6 +908,24 @@ html.dark .dayStrip{background:#16271b;border-color:#21402b}
   </div>
 </div>
 
+<div id="syncModal" class="modalOverlay">
+  <div class="modalBox" style="width:min(440px,96vw)">
+    <div class="modalTitle">☁ Cloud Sync — Google Sheet</div>
+    <div id="syncInfo" style="background:var(--soft);border-radius:12px;padding:12px;margin-bottom:12px"></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Every mark is saved on this phone first, then sent to the Google Sheet automatically. With no internet it waits and sends later. The Payroll app reads Days and OT from the same Sheet.</div>
+    <label style="font-size:12px;font-weight:800">Sync PIN</label>
+    <input id="syncPinIn" type="password" inputmode="numeric" autocomplete="off" placeholder="Enter PIN" style="width:100%;font-size:18px;padding:10px;margin:4px 0 10px;border:1px solid var(--line);border-radius:10px">
+    <div id="syncAdv">
+      <label style="font-size:12px;font-weight:800">Google Sheet link (from Apps Script)</label>
+      <input id="syncUrlIn" type="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec" style="width:100%;font-size:13px;padding:10px;margin:4px 0 10px;border:1px solid var(--line);border-radius:10px">
+    </div>
+    <div class="modalActions">
+      <button onclick="saveSyncSettings()">💾 Save &amp; Connect</button>
+      <button class="btnSoft" onclick="syncNow('manual').then(()=>fillSyncModal())">🔄 Sync now</button>
+      <button class="btnSoft" onclick="closeSync()">Close</button>
+    </div>
+  </div>
+</div>
 <div id="shareNotice" class="shareNotice"></div>
 
 <script>
@@ -1010,6 +1004,7 @@ function safePersist(){
   if(!lsOk&&!_lsFull){_lsFull=true;showShareNotice('⚠ Phone storage is full. Your data is still saved on this device, but please download a backup and free up space.');}
   if(lsOk)_lsFull=false;
   queueMicrotask(()=>mirrorAllToIDB());
+  scheduleCloudSync();
   return lsOk;
 }
 /* Trim the localStorage auto-backup set down to `keep` newest entries (or clear it). */
@@ -1038,6 +1033,7 @@ function autoCommitDefaults(){
       d[e.no]=lv
         ?{status:'L',in:'',out:'',ot:0,dayVal:0,note:'On leave'+(lv.note?': '+lv.note:'')}
         :{status:'P',in:loadedDefIn(),out:loadedDefOut(),ot:+(loadedDefOT()||0),dayVal:1,note:''};
+      d[e.no]._a=1;   /* automatic default — a real mark from the Sheet always wins over it */
       added=true;
     }
   });
@@ -1125,6 +1121,7 @@ async function mirrorAllToIDB(){
 function safeSetEmployees(){
   try{localStorage.setItem(EMPSTORE,JSON.stringify(employees));}catch(e){}
   if('indexedDB'in window&&window.indexedDB){idbPut(EMPSTORE,employees).catch(()=>{});}
+  scheduleCloudSync();
 }
 async function hydrateStorage(){
   /* Load both stores and keep whichever has the newer revision, so a stale
@@ -1257,6 +1254,7 @@ function init(){
   },{passive:false});
   syncCardToggleBtn();
   registerAttendancePWA();
+  initBackNav();
   /* ── Data-loss guards: flush any pending edit when app is hidden/closed ── */
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){flushPending();if(driveAutoOn())driveAutoSync();}});
   window.addEventListener('pagehide',flushPending);
@@ -1266,84 +1264,96 @@ function init(){
   /* establish undo baseline = fully loaded state (after auto-commit) */
   _undoBaseline=JSON.parse(JSON.stringify(db));
 }
+/* ══ v46: REAL MOBILE-APP BEHAVIOUR (same approach as the Petty Cash app) ══ */
+let _deferredInstall=null;
+function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true}
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}
 function registerAttendancePWA(){
+  /* Android / Chrome: show our own green "Install app" banner */
   window.addEventListener('beforeinstallprompt',e=>{
-    e.preventDefault();
-    window._ggA2hs=e;
+    e.preventDefault();_deferredInstall=e;
+    if(!isStandalone()&&localStorage.getItem('gg_install_dismissed')!=='1')
+      document.getElementById('installBanner').classList.add('show');
   });
+  window.addEventListener('appinstalled',()=>{document.getElementById('installBanner').classList.remove('show');_deferredInstall=null;});
+  /* iPhone has no install button — show a one-line hint once */
+  if(isIOS()&&!isStandalone()&&localStorage.getItem('gg_install_dismissed')!=='1'){
+    document.getElementById('installText').innerHTML='Install: tap <b>Share ⬆</b> then <b>Add to Home Screen</b>';
+    document.getElementById('installOk').style.display='none';
+    document.getElementById('installBanner').classList.add('show');
+  }
   if(!('serviceWorker'in navigator)||location.protocol==='file:')return;
-  /* Try real sw.js first (needed when hosted on Netlify for proper scope + offline cache).
-     Falls back to blob-URL SW only as a last resort. */
-  navigator.serviceWorker.register('./sw.js',{scope:'./'})
-    .then(()=>{window._ggSwOk=true})
-    .catch(()=>{
-      /* sw.js not found — use inline blob SW (scope limited, but better than nothing) */
-      try{
-        const swCode=`const CACHE='gg-attendance-v3';
-self.addEventListener('install',e=>{self.skipWaiting();});
-self.addEventListener('activate',e=>{e.waitUntil(Promise.all([self.clients.claim(),caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))]))});
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();if(r.ok)caches.open(CACHE).then(ca=>ca.put(e.request,c)).catch(()=>{});return r}).catch(()=>caches.match(e.request)));});`;
-        const blob=new Blob([swCode],{type:'application/javascript'});
-        navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
-      }catch(e){}
+  navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(reg=>{
+    /* check for a newer version every time the app opens / comes back */
+    reg.update().catch(()=>{});
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update().catch(()=>{});});
+    reg.addEventListener('updatefound',()=>{
+      const nw=reg.installing;if(!nw)return;
+      nw.addEventListener('statechange',()=>{
+        if(nw.state==='installed'&&navigator.serviceWorker.controller)nw.postMessage('SKIP_WAITING');
+      });
     });
+  }).catch(()=>{});
+  let reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(reloaded)return;
+    /* never reload while a card is being edited — the new version loads next time instead */
+    if(_dirty||document.querySelector('.modalOverlay.show'))return;
+    reloaded=true;flushPending();location.reload();
+  });
 }
-
-/* ── DOWNLOAD sw.js — user uploads this alongside the HTML on Netlify ── */
-function downloadSwJs(){
-  const code=`/* Garden Grow Attendance — Service Worker
-   Upload this file as sw.js in the SAME folder as GardenGrow_Attendance_App.html on Netlify.
-   This enables true offline support and proper PWA / APK installation.
-*/
-const CACHE='gg-attendance-v3';
-
-self.addEventListener('install',e=>{
-  self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE).then(c=>
-      c.addAll(['./','./${location.pathname.split('/').pop()||'GardenGrow_Attendance_App.html'}'])
-      .catch(()=>{})
-    )
-  );
-});
-
-self.addEventListener('activate',e=>{
-  e.waitUntil(Promise.all([
-    self.clients.claim(),
-    caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
-  ]));
-});
-
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET')return;
-  e.respondWith(
-    fetch(e.request)
-      .then(r=>{
-        if(r.ok){const c=r.clone();caches.open(CACHE).then(ca=>ca.put(e.request,c)).catch(()=>{})}
-        return r;
-      })
-      .catch(()=>caches.match(e.request))
-  );
-});
-`;
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([code],{type:'application/javascript'}));
-  a.download='sw.js';
-  document.body.appendChild(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
-  showShareNotice('✅ sw.js downloaded — upload it alongside the HTML file on Netlify.');
+function doInstall(){
+  document.getElementById('installBanner').classList.remove('show');
+  if(_deferredInstall){_deferredInstall.prompt();_deferredInstall=null;}
+}
+function dismissInstall(){
+  document.getElementById('installBanner').classList.remove('show');
+  try{localStorage.setItem('gg_install_dismissed','1')}catch(e){}
 }
 function promptInstallApp(){
-  const p=window._ggA2hs;
-  if(p&&typeof p.prompt==='function'){
-    p.prompt();
-    if(p.userChoice&&typeof p.userChoice.then==='function')
-      p.userChoice.then(()=>{window._ggA2hs=null}).catch(()=>{window._ggA2hs=null});
-    else window._ggA2hs=null;
-    return;
-  }
-  showShareNotice('Android: open in Chrome → ⋮ → Install app or Add to Home screen. History is stored on this phone (browser storage + a backup copy). Use Backup JSON to copy to another device. For one-tap install + offline, host these files on HTTPS (same folder).');
+  if(isStandalone()){showShareNotice('✅ The app is already installed on this phone.');return;}
+  if(_deferredInstall){doInstall();return;}
+  if(isIOS())showShareNotice('iPhone: open this page in Safari → tap Share ⬆ → "Add to Home Screen".');
+  else showShareNotice('Android: open in Chrome → ⋮ menu → "Install app" (or "Add to Home screen").');
 }
+/* "Update app now": throws away this phone's saved copy of the APP (not your
+   attendance data — that stays in storage and in the Google Sheet) and loads
+   the newest version from GitHub. */
+async function forceUpdateApp(){
+  flushPending();scanChanges();saveSyncMeta();
+  showShareNotice('Updating app…');
+  await new Promise(r=>setTimeout(r,400));
+  try{if('serviceWorker'in navigator){const rs=await navigator.serviceWorker.getRegistrations();for(const r of rs)await r.unregister();}}catch(e){}
+  try{if(window.caches){const ks=await caches.keys();for(const k of ks)await caches.delete(k);}}catch(e){}
+  location.replace(location.pathname+'?u='+Date.now());
+}
+
+/* ── Phone BACK button: moves between tabs and closes pop-ups instead of
+   leaving the app (same idea as Petty Cash). ── */
+let _navFromPop=false,_curPage='daily';
+function initBackNav(){
+  try{history.replaceState({p:'daily'},'',location.pathname+location.search);}catch(e){}
+  /* any pop-up that opens gets its own "back" step */
+  const mo=new MutationObserver(muts=>{
+    muts.forEach(m=>{
+      const el=m.target;if(!el.classList||!el.classList.contains('modalOverlay')||!el.id)return;
+      const open=el.classList.contains('show'),was=(m.oldValue||'').split(/\s+/).includes('show');
+      if(open&&!was&&!_navFromPop){try{history.pushState({p:_curPage,modal:el.id},'');}catch(e){}}
+      if(!open&&was&&!_navFromPop&&history.state&&history.state.modal===el.id){_navFromPop=true;history.back();setTimeout(()=>{_navFromPop=false},400);}
+    });
+  });
+  document.querySelectorAll('.modalOverlay').forEach(el=>mo.observe(el,{attributes:true,attributeFilter:['class'],attributeOldValue:true}));
+  window.addEventListener('popstate',e=>{
+    if(_navFromPop){_navFromPop=false;return;}
+    const openModal=[...document.querySelectorAll('.modalOverlay.show')].pop();
+    if(openModal){_navFromPop=true;openModal.classList.remove('show');setTimeout(()=>{_navFromPop=false},0);return;}
+    const mp=document.getElementById('morePanel');
+    if(mp&&mp.classList.contains('open')){mp.classList.remove('open');try{history.pushState({p:_curPage},'');}catch(_){}return;}
+    const p=(e.state&&e.state.p)||'daily';
+    _navFromPop=true;try{showPage(p);}finally{_navFromPop=false;}
+  });
+}
+
 function fillTimes(){
   let opts='';
   for(let h=0;h<24;h++)for(let m of [0,30]){
@@ -1436,6 +1446,8 @@ function selectCalDate(d){
 
 /* ── PAGE ROUTING ───────────────────────────────────────────── */
 function showPage(p){
+  if(!_navFromPop&&p!==_curPage){try{history.pushState({p},'');}catch(e){}}
+  _curPage=p;
   ['daily','summary','leave'].forEach(x=>{
     document.getElementById(x+'Page').classList.toggle('active',x===p);
     document.getElementById('tab'+cap(x)).classList.toggle('active',x===p);
@@ -1677,6 +1689,8 @@ function saveBarSave(){flushPending();saveDay(true);updateSaveBar();}
 /* ── BACKUP REMINDER ────────────────────────────────────────── */
 function checkBackupReminder(){
   const bar=document.getElementById('backupReminder');if(!bar)return;
+  /* v46: when everything is safely in the Google Sheet, this nag is not needed */
+  if(typeof syncOn==='function'&&syncOn()&&_syncState.last&&Date.now()-_syncState.last<7*864e5&&syncPendingCount()===0){bar.classList.remove('show');return;}
   const last=localStorage.getItem(LAST_BACKUP_DL_KEY)||'';
   let days=Infinity;
   if(last){const diff=Date.now()-new Date(last).getTime();days=Math.floor(diff/86400000);}
@@ -1792,6 +1806,10 @@ function monthlySummary(m){
   }));
   return Object.values(s);
 }
+/* Payroll rule (agreed with Esa, Oct 2026): salary is on a 30-day basis.
+   Days = 30 − Absent − ½ × Half Day.  Day Off and Leave are paid.
+   The Payroll app uses the exact same rule when it reads the Sheet. */
+function payrollDaysOf(r){return Math.max(0,30-(r.a||0)-0.5*(r.h||0));}
 /* ── SALARY PERIOD (15th → 14th of next month, half-open [15th, next 15th)) ──
    A "salary month" is named after the month it STARTS in:
    15 May → 14 Jun  =  "May" salary period.
@@ -1871,9 +1889,9 @@ function showSummary(type){
           a=rows.reduce((x,r)=>x+r.a,0),
           tot=rows.reduce((x,r)=>x+r.days,0),
           ot=rows.reduce((x,r)=>x+r.ot,0);
-    html=metrics(['✅ Present',p],['❌ Absent',a],['📅 Pay Days',tot.toFixed(1)],['⏱ OT Hrs',ot.toFixed(1)])+
-         `<div style="font-size:11px;color:var(--muted);margin:2px 0 4px;text-align:right">Salary period ${dayMon(sp.start)} – ${dayMon(sp.end)} · Pay Days feed payroll</div>`+
-         table(['Employee','Pay Days','Present','Half','Absent','Leave','OT'],rows.map(r=>[short(r.name),r.days,r.p,r.h,r.a,r.l,r.ot.toFixed(1)]));
+    html=metrics(['✅ Present',p],['❌ Absent',a],['⏰ Half',h],['⏱ OT Hrs',ot.toFixed(1)])+
+         `<div style="font-size:11px;color:var(--muted);margin:2px 0 4px;text-align:right">Salary period ${dayMon(sp.start)} – ${dayMon(sp.end)} · Payroll Days = 30 − Absent − ½ Half (Day Off &amp; Leave are paid)</div>`+
+         table(['Employee','Payroll Days','Present','Half','Absent','Leave','Off','OT'],rows.map(r=>[short(r.name),payrollDaysOf(r),r.p,r.h,r.a,r.l,r.o,r.ot.toFixed(1)]));
   }else{
     const rows=monthlySummary(monthKey()),
           p=rows.reduce((x,r)=>x+r.p,0),
@@ -2885,9 +2903,303 @@ function updateStorageMeter(){
   }
 }
 
+/* ══ CLOUD SYNC — Google Sheet "Garden Grow Attendance — Live" ══════════
+   How it works (v46):
+   • Every save still writes to this phone first (localStorage + IndexedDB),
+     exactly as before — the phone is never left waiting for the internet.
+   • 1.5 s later the app compares the data with what the Sheet last had
+     (a fingerprint per employee-per-day) and queues only what changed.
+   • The queue is sent when online; anything changed on another device is
+     pulled back. Newest change wins. Old data from before v46 is uploaded
+     once with a "weak" timestamp, so it can never overwrite newer data.
+   • The Payroll app reads the Sheet directly (Days = 30 − Absent − ½·Half). */
+const SYNC_URL_DEFAULT='https://script.google.com/macros/s/AKfycbzUS9f8e0dMar585B7BW67tJRG2WL0REp3wIobT6zXH1SqshXDshKvMkWrVP4M0bIc/exec';   /* ← filled in once the Apps Script is deployed */
+const SYNC_URL_KEY='gg_att_sync_url_v1', SYNC_PIN_KEY='gg_att_sync_pin_v1', SYNC_META='gg_att_sync_meta_v1';
+const SYNC_BATCH=400;
+let _sync={base:null,outbox:{},cursor:0,loaded:false};
+let _syncBusy=null,_syncAgain=false,_syncTimer=null,_syncMetaTimer=null,_applyingRemote=false;
+let _syncState={phase:'idle',err:'',last:+(localStorage.getItem('gg_att_sync_last')||0),progress:null};
+
+function syncUrl(){return (localStorage.getItem(SYNC_URL_KEY)||SYNC_URL_DEFAULT||'').trim()}
+function syncPin(){return (localStorage.getItem(SYNC_PIN_KEY)||'').trim()}
+function syncOn(){return !!(syncUrl()&&syncPin())}
+function syncPendingCount(){return Object.keys(_sync.outbox||{}).length}
+function _fp(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)+'.'+s.length}
+function _canonRec(r){return r?JSON.stringify([r.status||'',r.in||'',r.out||'',+(r.ot||0),+(r.dayVal||0),r.note||'']):'∅'}
+function _cleanRec(r){return {status:r.status||'',in:r.in||'',out:r.out||'',ot:+(r.ot||0),dayVal:+(r.dayVal||0),note:r.note||''}}
+
+async function loadSyncMeta(){
+  try{
+    const m=('indexedDB'in window&&window.indexedDB)?await idbGet(SYNC_META):null;
+    if(m&&typeof m==='object'){_sync.base=m.base||null;_sync.outbox=m.outbox||{};_sync.cursor=+m.cursor||0;}
+  }catch(e){}
+  _sync.loaded=true;
+}
+function saveSyncMeta(){
+  clearTimeout(_syncMetaTimer);
+  _syncMetaTimer=setTimeout(()=>{
+    if(!('indexedDB'in window&&window.indexedDB))return;
+    idbPut(SYNC_META,{base:_sync.base,outbox:_sync.outbox,cursor:_sync.cursor,at:Date.now()}).catch(()=>{});
+  },300);
+}
+
+/* Compare the live data with what the Sheet last had; queue the differences. */
+function scanChanges(){
+  if(!_sync.loaded)return 0;
+  const first=!_sync.base;
+  if(first)_sync.base={};
+  const base=_sync.base,ob=_sync.outbox,now=Date.now(),seen=new Set();
+  let added=0;
+  const consider=(k,rec,h,weak,name)=>{
+    seen.add(k);
+    if(base[k]===h){if(ob[k])delete ob[k];return;}          /* back to what the Sheet has */
+    if(ob[k]&&ob[k].h===h)return;                           /* already queued */
+    ob[k]={k,rec:rec==null?null:JSON.parse(JSON.stringify(rec)),h,u:(first||weak)?1:now,n:name||''};
+    added++;
+  };
+  const names={};employees.forEach(e=>names[e.no]=e.name);
+  Object.keys(db.days||{}).forEach(d=>{
+    const dd=db.days[d]||{};
+    Object.keys(dd).forEach(no=>{
+      const r=dd[no];if(!r||typeof r!=='object')return;
+      consider('d|'+d+'|'+no,_cleanRec(r),_fp(_canonRec(r)),!!r._a,names[no]||no);
+    });
+  });
+  consider('leaves',db.leaves||[],_fp(JSON.stringify(db.leaves||[])),false);
+  consider('employees',employees,_fp(JSON.stringify(employees)),false);
+  /* records that existed in the Sheet but were removed here (undo / restore) */
+  Object.keys(base).forEach(k=>{
+    if(seen.has(k)||base[k]==='∅'||!k.startsWith('d|'))return;
+    if(ob[k]&&ob[k].h==='∅')return;
+    ob[k]={k,rec:null,h:'∅',u:now,n:''};added++;
+  });
+  if(added||first)saveSyncMeta();
+  return added;
+}
+
+/* Called after every local save (from safePersist / safeSetEmployees). */
+function scheduleCloudSync(){
+  if(_applyingRemote||!_sync.loaded)return;
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(()=>{scanChanges();renderSyncStatus();syncNow('save');},1500);
+}
+
+function _withTimeout(ms){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);return {signal:c.signal,done:()=>clearTimeout(t)};}
+async function _syncReq(method,params,body){
+  const url=syncUrl();
+  const to=_withTimeout(45000);
+  try{
+    let res;
+    if(method==='GET'){
+      const q=new URLSearchParams(Object.assign({pin:syncPin()},params)).toString();
+      res=await fetch(url+(url.includes('?')?'&':'?')+q,{method:'GET',signal:to.signal,cache:'no-store'});
+    }else{
+      res=await fetch(url,{method:'POST',signal:to.signal,headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify(Object.assign({pin:syncPin()},body))});
+    }
+    const j=await res.json();
+    if(!j||!j.ok){const e=new Error(j&&j.error||'SERVER');e.code=j&&j.error;throw e;}
+    return j;
+  }finally{to.done();}
+}
+
+/* Put one record from the Sheet into this phone's data. Returns true if it changed anything. */
+function _applyRemote(it){
+  if(!it||!it.k)return false;
+  const ob=_sync.outbox[it.k];
+  if(ob&&ob.u>=(+it.u||0))return false;                    /* this phone's change is newer — keep it */
+  if(it.k==='leaves'||it.k==='employees'){
+    const list=Array.isArray(it.rec)?it.rec:[];
+    const h=_fp(JSON.stringify(list));
+    delete _sync.outbox[it.k];
+    _sync.base[it.k]=h;
+    if(it.k==='leaves'){
+      if(_fp(JSON.stringify(db.leaves||[]))===h)return false;
+      db.leaves=list;return true;
+    }
+    if(!list.length||_fp(JSON.stringify(employees))===h)return false;
+    employees=list;
+    try{localStorage.setItem(EMPSTORE,JSON.stringify(employees));}catch(e){}
+    return 'emp';
+  }
+  if(!it.k.startsWith('d|'))return false;
+  const parts=it.k.split('|'),d=parts[1],no=parts[2];
+  const cur=(db.days[d]||{})[no];
+  delete _sync.outbox[it.k];
+  if(it.rec){
+    const rec=_cleanRec(it.rec),h=_fp(_canonRec(rec));
+    _sync.base[it.k]=h;
+    if(cur&&_fp(_canonRec(cur))===h){if(cur._a)delete cur._a;return false;}
+    if(!db.days[d])db.days[d]={};
+    db.days[d][no]=rec;return true;
+  }
+  _sync.base[it.k]='∅';
+  if(!cur)return false;
+  delete db.days[d][no];
+  if(!Object.keys(db.days[d]).length)delete db.days[d];
+  return true;
+}
+
+async function _syncPush(){
+  const keys=Object.keys(_sync.outbox);
+  if(!keys.length)return;
+  const big=keys.length>SYNC_BATCH;
+  for(let i=0;i<keys.length;i+=SYNC_BATCH){
+    const batch=keys.slice(i,i+SYNC_BATCH).map(k=>_sync.outbox[k]).filter(Boolean);
+    if(!batch.length)continue;
+    if(big){_syncState.progress={done:i,total:keys.length};renderSyncStatus();}
+    const j=await _syncReq('POST',null,{op:'push',items:batch.map(o=>({k:o.k,rec:o.rec,u:o.u,n:o.n}))});
+    batch.forEach(o=>{if(_sync.outbox[o.k]===o){_sync.base[o.k]=o.h;delete _sync.outbox[o.k];}});
+    let changed=false;(j.rejected||[]).forEach(it=>{if(_applyRemote(it))changed=true;});
+    if(changed)_afterRemoteChange(false);
+    saveSyncMeta();
+  }
+  _syncState.progress=null;
+}
+async function _syncPull(){
+  let changed=false,empChanged=false;
+  for(let guard=0;guard<60;guard++){
+    const j=await _syncReq('GET',{op:'pull',since:_sync.cursor,limit:3000});
+    (j.items||[]).forEach(it=>{const r=_applyRemote(it);if(r)changed=true;if(r==='emp')empChanged=true;});
+    if(typeof j.cursor==='number')_sync.cursor=j.cursor;
+    if(!j.more)break;
+  }
+  if(changed)_afterRemoteChange(empChanged);
+  saveSyncMeta();
+}
+/* Something arrived from the Sheet: save it on the phone and refresh the screen. */
+function _afterRemoteChange(empChanged){
+  _applyingRemote=true;
+  try{
+    safePersist();
+    if(empChanged){try{safeSetEmployees();}catch(e){}}
+    /* undo must never "undo" someone else's change */
+    undoHistory=[];_undoBaseline=JSON.parse(JSON.stringify(db));
+    try{hideUndoBar();}catch(e){}
+    if(empChanged){try{renderLeaveEmpOptions();}catch(e){}}
+    try{renderCards();}catch(e){}
+    try{renderLeave();}catch(e){}
+    try{if(document.getElementById('summaryPage').classList.contains('active'))showSummary(currentSummary);}catch(e){}
+    try{updateSaveBar();}catch(e){}
+  }finally{_applyingRemote=false;}
+}
+
+/* One sync at a time: a second caller waits for the one already running. */
+function syncNow(reason){
+  if(!syncOn()||!_sync.loaded){renderSyncStatus();return Promise.resolve(false);}
+  if(_syncBusy){_syncAgain=true;return _syncBusy;}
+  _syncBusy=(async()=>{
+    /* yield first: if this run ends without any network call (e.g. offline),
+       the `finally` below must run AFTER _syncBusy is assigned, or the app
+       would think a sync is still running forever and never retry. */
+    await Promise.resolve();
+    let ok=false;
+    try{
+      do{
+        _syncAgain=false;
+        scanChanges();
+        if(!navigator.onLine){_syncState.phase='offline';break;}
+        _syncState.phase='syncing';_syncState.err='';renderSyncStatus();
+        await _syncPush();
+        if(!_dirty)await _syncPull();     /* never overwrite a card being typed in */
+        ok=true;
+      }while(_syncAgain);
+      if(ok){
+        _syncState.phase='ok';_syncState.last=Date.now();
+        try{checkBackupReminder();}catch(e){}
+        try{localStorage.setItem('gg_att_sync_last',String(_syncState.last));}catch(e){}
+      }
+    }catch(e){
+      _syncState.phase=(!navigator.onLine)?'offline':'error';
+      _syncState.err=e&&e.code==='WRONG_PIN'?'WRONG_PIN':(e&&e.name==='AbortError'?'Timed out':String(e&&e.message||e));
+      _syncState.progress=null;
+    }finally{
+      _syncBusy=null;saveSyncMeta();renderSyncStatus();
+    }
+    return ok;
+  })();
+  return _syncBusy;
+}
+
+/* ── Sync status: header pill + banner + settings panel ── */
+function _ago(t){if(!t)return'never';const s=Math.round((Date.now()-t)/1000);if(s<60)return'just now';const m=Math.round(s/60);if(m<60)return m+' min ago';const h=Math.round(m/60);if(h<24)return h+' h ago';return new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+function renderSyncStatus(){
+  const pill=document.getElementById('syncPill'),ban=document.getElementById('syncBanner');
+  const n=syncPendingCount(),st=_syncState;
+  let pTxt='☁ Off',pCls='off',bTxt='',bCls='';
+  if(!syncUrl()){pTxt='☁ Off';pCls='off';}
+  else if(!syncPin()){pTxt='☁ PIN?';pCls='warn';bTxt='☁ Cloud sync needs the PIN — tap here';bCls='warn';}
+  else if(st.err==='WRONG_PIN'){pTxt='⚠ PIN';pCls='bad';bTxt='⚠ Cloud sync PIN is wrong — tap here to fix';bCls='bad';}
+  else if(st.progress){pTxt='⏳ '+Math.round(100*st.progress.done/st.progress.total)+'%';pCls='busy';
+    bTxt=`⏳ Uploading your records to Google Sheet… ${st.progress.done} of ${st.progress.total} — keep the app open`;bCls='busy';}
+  else if(st.phase==='syncing'){pTxt='⏳ Sync';pCls='busy';}
+  else if(st.phase==='offline'||!navigator.onLine){pTxt=n?'📴 '+n:'📴';pCls='warn';
+    bTxt=n?`📴 No internet — ${n} change${n===1?'':'s'} saved on this phone, will send automatically`:'';bCls='warn';}
+  else if(st.phase==='error'){pTxt='⚠ '+(n||'!');pCls='bad';bTxt=`⚠ Could not reach Google Sheet — ${n} change${n===1?'':'s'} waiting. Tap to retry.`;bCls='bad';}
+  else if(n){pTxt='☁ '+n;pCls='warn';}
+  else{pTxt='☁ ✓';pCls='ok';}
+  if(pill){pill.textContent=pTxt;pill.className='syncPill '+pCls;}
+  if(ban){ban.textContent=bTxt;ban.className='syncBanner '+bCls+(bTxt?' show':'');}
+  const box=document.getElementById('syncInfo');
+  if(box&&document.getElementById('syncModal').classList.contains('show'))fillSyncModal();
+}
+function openSync(){
+  document.getElementById('syncUrlIn').value=localStorage.getItem(SYNC_URL_KEY)||'';
+  document.getElementById('syncPinIn').value=syncPin();
+  document.getElementById('syncAdv').style.display=SYNC_URL_DEFAULT?'none':'block';
+  fillSyncModal();
+  document.getElementById('syncModal').classList.add('show');
+}
+function closeSync(){document.getElementById('syncModal').classList.remove('show')}
+function fillSyncModal(){
+  const n=syncPendingCount(),st=_syncState;
+  let state;
+  if(!syncUrl())state='⚪ Not set up yet';
+  else if(!syncPin())state='🟡 Enter the PIN below';
+  else if(st.err==='WRONG_PIN')state='🔴 Wrong PIN';
+  else if(st.progress)state=`⏳ Uploading ${st.progress.done} / ${st.progress.total}`;
+  else if(st.phase==='syncing')state='⏳ Syncing…';
+  else if(!navigator.onLine||st.phase==='offline')state='📴 No internet — changes are kept on this phone';
+  else if(st.phase==='error')state='🔴 Could not reach Google Sheet ('+escHTML(st.err)+')';
+  else state=n?'🟡 '+n+' change(s) waiting':'🟢 Everything is in Google Sheet';
+  document.getElementById('syncInfo').innerHTML=
+    `<div style="font-size:15px;font-weight:800;margin-bottom:6px">${state}</div>
+     <div style="font-size:12px;color:var(--muted)">Last synced: <b>${_ago(st.last)}</b> · Waiting to send: <b>${n}</b></div>`;
+}
+function saveSyncSettings(){
+  const u=document.getElementById('syncUrlIn').value.trim();
+  const p=document.getElementById('syncPinIn').value.trim();
+  if(u&&!/^https:\/\/script\.google(usercontent)?\.com\//.test(u)){showShareNotice('⚠ That link does not look like a Google Apps Script link');return;}
+  try{
+    if(u)localStorage.setItem(SYNC_URL_KEY,u);else localStorage.removeItem(SYNC_URL_KEY);
+    if(p)localStorage.setItem(SYNC_PIN_KEY,p);else localStorage.removeItem(SYNC_PIN_KEY);
+  }catch(e){}
+  _syncState.err='';_syncState.phase='idle';
+  renderSyncStatus();fillSyncModal();
+  if(syncOn())syncNow('settings').then(ok=>{
+    if(_syncState.err==='WRONG_PIN')showShareNotice('🔴 Wrong PIN — please check it');
+    else if(ok)showShareNotice('✅ Connected to Google Sheet');
+  });
+}
+function initCloudSync(){
+  renderSyncStatus();
+  window.addEventListener('online',()=>{renderSyncStatus();syncNow('online');});
+  window.addEventListener('offline',()=>{_syncState.phase='offline';renderSyncStatus();});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible')syncNow('resume');
+    else{scanChanges();saveSyncMeta();}
+  });
+  /* pick up changes made on another device while the app stays open */
+  setInterval(()=>{if(document.visibilityState==='visible')syncNow('timer');},120000);
+  setInterval(renderSyncStatus,30000);
+  if(syncUrl()&&!syncPin())setTimeout(openSync,900);
+  syncNow('open');
+}
+
 /* ── ENHANCED INIT ──────────────────────────────────────────── */
 async function bootstrap(){
   await hydrateStorage();
+  await loadSyncMeta();
   initDark();
   allCardsCollapsed=true;
   init();
@@ -2898,6 +3210,7 @@ async function bootstrap(){
   /* Quota check with short delay so UI renders first */
   setTimeout(checkStorageQuota,3000);
   driveOpenSync();
+  initCloudSync();
   if(_recoveredCount>0)setTimeout(()=>showShareNotice('✓ Loaded your existing records from this device ('+_recoveredCount+' days)'),1200);
 }
 bootstrap();
