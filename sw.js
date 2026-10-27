@@ -1,4 +1,4 @@
-/* Garden Grow Attendance — Service Worker (v55)
+/* Garden Grow Attendance — Service Worker (v56)
    Upload as sw.js in the SAME GitHub repo/folder as index.html.
    • Network-first: always loads the newest app when online, falls back to the
      saved copy offline.
@@ -6,7 +6,7 @@
    • Never touches attendance data (localStorage / IndexedDB) and never caches
      the Google Sheet sync calls.
 */
-const CACHE = 'gg-attendance-v55';
+const CACHE = 'gg-attendance-v56';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -36,7 +36,7 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     fetch(req)
       .then(r => {
-        if (r.ok && !url.search) {          /* v55: never store copies with ?…  (update checks) */
+        if (r.ok && !url.search) {          /* v56: never store copies with ?…  (update checks) */
           const c = r.clone();
           caches.open(CACHE).then(ca => ca.put(req, c)).catch(() => {});
         }
