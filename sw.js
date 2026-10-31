@@ -1,47 +1,15 @@
-/* Garden Grow Attendance — Service Worker (v56)
-   Upload as sw.js in the SAME GitHub repo/folder as index.html.
-   • Network-first: always loads the newest app when online, falls back to the
-     saved copy offline.
-   • Change CACHE below on every index.html update so phones pick it up.
-   • Never touches attendance data (localStorage / IndexedDB) and never caches
-     the Google Sheet sync calls.
-*/
-const CACHE = 'gg-attendance-v56';
-const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
-
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL).catch(() => {})));
+/* Garden Grow Team Planner — offline copy. Newest version is always fetched first when online. */
+const CACHE = 'gg-team-planner-v53';
+const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
+self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
+self.addEventListener('activate', (e) => {
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
-
-/* the app asks a newly installed version to take over right away */
-self.addEventListener('message', e => {
-  if (e.data === 'SKIP_WAITING') self.skipWaiting();
-});
-
-self.addEventListener('activate', e => {
-  e.waitUntil(Promise.all([
-    self.clients.claim(),
-    caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('gg-attendance') && k !== CACHE).map(k => caches.delete(k))))
-  ]));
-});
-
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  /* Only the app's own files (and its fonts) are handled here. Everything else —
-     above all the Google Sheet sync calls — goes straight to the network. */
-  const isFont = /^fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
-  if (url.origin !== self.location.origin && !isFont) return;
+self.addEventListener('fetch', (e) => {
+  const u = new URL(e.request.url);
+  if (e.request.method !== 'GET' || u.origin !== location.origin) return; /* Google Sheet sync and fonts go straight to the internet */
   e.respondWith(
-    fetch(req)
-      .then(r => {
-        if (r.ok && !url.search) {          /* v56: never store copies with ?…  (update checks) */
-          const c = r.clone();
-          caches.open(CACHE).then(ca => ca.put(req, c)).catch(() => {});
-        }
-        return r;
-      })
-      .catch(() => caches.match(req, {ignoreSearch: true}).then(m => m || (req.mode === 'navigate' ? caches.match('./index.html') : undefined)))
+    fetch(e.request).then((r) => { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); return r; })
+      .catch(() => caches.match(e.request).then((r) => r || caches.match('./index.html')))
   );
 });
