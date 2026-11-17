@@ -6038,12 +6038,14 @@ function v74Batch(fn){
   if(n){saveDB();try{renderCards();}catch(e){}}
   return n;
 }
+function v74Settle(){return new Promise(r=>setTimeout(r,450));}
+async function v74Ask(t,h,b){await v74Settle();const v=await ggAsk(t,h,b);await v74Settle();return v;}
 /* get the other phone's newest marks; true = got them (or no Sheet), false = could not (slow / no answer) */
 async function v74Pull(){
   try{if(typeof syncOn!=='function'||!syncOn()||!_sync.loaded)return true;
     if(!navigator.onLine)return false;
     const t0=Date.now();let done=false;
-    await Promise.race([syncNow('bulk').then(()=>{done=true;}),new Promise(r=>setTimeout(r,12000))]);
+    await Promise.race([syncNow('bulk').then(()=>{done=true;}),new Promise(r=>setTimeout(r,25000))]);
     return done&&_syncState.phase!=='error'&&(_syncState.last||0)>=t0-1000;
   }catch(e){return false;}
 }
@@ -6051,7 +6053,7 @@ async function v74Pull(){
 async function v74PullOk(){
   showShareNotice('⏳ Getting the newest marks…');
   if(await v74Pull())return true;
-  const v=await ggAsk('Could not get the newest marks','The Google Sheet did not answer. If the other phone changed anyone today, this could overwrite it.',[{v:'y',t:'Continue anyway',c:'g'},{v:'',t:'Cancel — try again later',c:'w'}]);
+  const v=await v74Ask('Could not get the newest marks','The Google Sheet did not answer. If the other phone changed anyone today, this could overwrite it.',[{v:'y',t:'Continue anyway',c:'g'},{v:'',t:'Cancel — try again later',c:'w'}]);
   return v==='y';
 }
 function v74Kick(){try{if(typeof syncKick==='function')syncKick();else if(syncOn())syncNow('auto');}catch(e){}}
@@ -6197,28 +6199,38 @@ function v74OtAll(){
     <div class="v74ds">You can still change any one person on his row after.</div>`);
 }
 function v74OtAllOther(){const v=prompt('Overtime hours for everyone at work (e.g. 1.5):','');if(v==null)return;const h=Math.max(0,Math.round((parseFloat(String(v).replace(',','.'))||0)*2)/2);if(!qvOtOk(h))return;_v74.h=h;v74OtAll();}
-async function v74OtAllGive(h){if(h==null)return;_v74.h=null;qkCloseSheet();const k=key();if(!(await v74PullOk()))return;if(key()!==k)return;_qvSetOTMany(v74Working(k),h,'at work');}
+async function v74OtAllGive(h){
+  if(h==null)return;_v74.h=null;qkCloseSheet();const k=key();
+  if(!(await v74PullOk()))return;if(key()!==k)return;
+  let nos=v74Working(k);if(!nos.length){showShareNotice('Nobody at work on this day');return;}
+  const own=nos.filter(no=>{const o=+qkRec(no).ot||0;return o&&o!==h;});
+  if(own.length){const v=await v74Ask('Some people already have overtime',own.map(no=>escHTML(v74Name(no))+' — '+qkFmtH(+qkRec(no).ot)+' h').join('<br>'),[{v:'keep',t:'Keep theirs · '+(h?qkFmtH(h)+' h':'none')+' for the others',c:'g'},{v:'all',t:(h?'Give '+qkFmtH(h)+' h':'No overtime')+' to them too',c:'w'},{v:'',t:'Cancel',c:'w'}]);
+    if(!v)return;if(key()!==k)return;if(v==='keep')nos=nos.filter(no=>!own.includes(no));}
+  let n=0;nos.forEach(no=>{if(!qkWorking(qkRec(no).status))return;if((+qkRec(no).ot||0)!==h){qkWrite(no,{ot:h});n++;}});
+  if(!n){showShareNotice('Nothing to change');return;}
+  qkCommit((h?qkFmtH(h)+' h overtime → ':'Overtime removed · ')+n+' people ✓ · Undo at the top');v74Kick();
+}
 
 /* All present: everyone who is not on leave becomes Present (one Undo step) */
 async function v74AllPresent(){
   if(futureBlock())return;v74PopClose();
-  if(_qvOff()&&!confirm('No connection to the Google Sheet — changes from the other phone cannot be checked. Continue?'))return;
   const k=key();
-  if(isWeekend(k)){const v=await ggAsk('Weekly day off',escHTML(dDay(k))+' is the weekly day off. Mark everyone <b>Present</b> (working today)?',[{v:'y',t:'Yes — everyone worked',c:'g'},{v:'',t:'Cancel',c:'w'}]);if(v!=='y')return;}
+  if(isWeekend(k)){const v=await v74Ask('Weekly day off',escHTML(dDay(k))+' is the weekly day off. Mark everyone <b>Present</b> (working today)?',[{v:'y',t:'Yes — everyone worked',c:'g'},{v:'',t:'Cancel',c:'w'}]);if(v!=='y')return;}
   if(!(await v74PullOk()))return;if(key()!==k)return;
   const hand=activeEmps(k).filter(e=>{if(leaveForDate(e.no,k))return false;const m=qvMarked(e.no,k);return m&&!m._a&&m.status!=='P';});
   let keepHand=false;
   if(hand.length){const W={H:'Half day',O:'Day off',A:'Absent',U:'Unpaid',L:'Leave'};
-    const v=await ggAsk('Some people are already marked',hand.map(e=>escHTML(v74Name(e.no))+' — '+(W[(qvMarked(e.no,k)||{}).status]||'')).join('<br>'),[{v:'keep',t:'Keep them · others Present',c:'g'},{v:'all',t:'Make them Present too',c:'w'},{v:'',t:'Cancel',c:'w'}]);
+    const v=await v74Ask('Some people are already marked',hand.map(e=>escHTML(v74Name(e.no))+' — '+(W[(qvMarked(e.no,k)||{}).status]||'')).join('<br>'),[{v:'keep',t:'Keep them · others Present',c:'g'},{v:'all',t:'Make them Present too',c:'w'},{v:'',t:'Cancel',c:'w'}]);
     if(!v)return;keepHand=v==='keep';}
-  let n=0,kept=0;
+  let n=0,kept=0,keptH=0;
   v74Batch(()=>{activeEmps(k).forEach(e=>{
     if(leaveForDate(e.no,k)){kept++;return;}
     const m=qvMarked(e.no,k);if(m&&!m._a&&m.status==='P')return;
-    if(keepHand&&m&&!m._a){kept++;return;}
+    if(keepHand&&m&&!m._a){keptH++;return;}
     qkWrite(e.no,_qvStPatch(e.no,'P'));n++;});if(n)saveDB();});
-  if(!n){showShareNotice('Everyone is already Present'+(kept?' · '+kept+' on leave':''));qkRender();return;}
-  qkRender();showShareNotice('✓ All present · '+n+' marked'+(kept?' · '+kept+' kept (leave / marked)':'')+' · Undo at the top');v74Kick();
+  const extra=(kept?' · '+kept+' on leave':'')+(keptH?' · '+keptH+' kept as marked':'');
+  if(!n){showShareNotice((keptH?'Nothing to change':'Everyone is already Present')+extra);qkRender();return;}
+  qkRender();showShareNotice('✓ All present · '+n+' marked'+extra+' · Undo at the top');v74Kick();
 }
 
 /* Same as yesterday: copies the last day's sick / half day / day off / unpaid and overtime (annual leave never) */
@@ -6241,7 +6253,7 @@ async function v74Yesterday(){
   const diff=activeEmps(k).filter(e=>{const y=dd[e.no],m=qvMarked(e.no,k);if(!y||!m||m._a||leaveForDate(e.no,k))return false;
     if(y.status==='L'&&v74Lt(e.no,yk)!=='S')return false;return m.status!==y.status||(+m.ot||0)!==(qkWorking(y.status)?+y.ot||0:0);});
   let over=false;
-  if(diff.length){const v=await ggAsk('Some people are already marked today',diff.map(e=>escHTML(v74Name(e.no))+' — today '+(W[qvMarked(e.no,k).status]||'')+(+qvMarked(e.no,k).ot?' +'+qkFmtH(qvMarked(e.no,k).ot)+'h':'')).join('<br>'),[{v:'keep',t:'Keep them · copy the others',c:'g'},{v:'all',t:'Copy yesterday over them too',c:'w'},{v:'',t:'Cancel',c:'w'}]);
+  if(diff.length){const v=await v74Ask('Some people are already marked today',diff.map(e=>escHTML(v74Name(e.no))+' — today '+(W[qvMarked(e.no,k).status]||'')+(+qvMarked(e.no,k).ot?' +'+qkFmtH(qvMarked(e.no,k).ot)+'h':'')).join('<br>'),[{v:'keep',t:'Keep them · copy the others',c:'g'},{v:'all',t:'Copy yesterday over them too',c:'w'},{v:'',t:'Cancel',c:'w'}]);
     if(!v)return;over=v==='all';if(key()!==k)return;}
   const before=JSON.stringify([db.days[k]||{},db.leaves||[]]);
   v74Batch(()=>{activeEmps(k).forEach(e=>{
@@ -6314,7 +6326,7 @@ function v74SumRows(sp){
       if(r.status==='P')days+=1;else if(r.status==='H')days+=0.5;
       if(qkWorking(r.status))ot+=+r.ot||0;
       const lt=(r.status==='L'||r.status==='U')?v74Lt(e.no,d):'';
-      if((r.status==='L'&&lt==='S')||(r.status==='U'&&lt==='X'))sick++;
+      if(d<=tdy&&((r.status==='L'&&lt==='S')||(r.status==='U'&&lt==='X')))sick++;
       if(r.status==='L'&&lt!=='S')ann++;});
     return {no:e.no,days,ot,sick,miss,ann};});
 }
