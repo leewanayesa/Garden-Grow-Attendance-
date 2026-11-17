@@ -3041,9 +3041,9 @@ async function _gsWriteData(sid){
     leaveRows.push([l.empNo,e.name,LV_TYPES[lvType(l)].full,l.start,l.end,l.days,l.note||'']);
   });
 
-  const sumRows=[['Salary Period','From','To','Emp No','Name','Payroll Days','Absent','Half Day','Unpaid Leave','Paid Leave','Day Off','Present','OT Hours','Not Marked']];
+  const sumRows=[['Salary Period','From','To','Emp No','Name','Payroll Days','Absent','Half Day','Unpaid Leave','Annual Leave','Sick Leave','Day Off','Present','OT Hours','Not Marked']];
   allSalaryPeriods().forEach(sp=>periodStatsFor(sp).forEach(r=>
-    sumRows.push([monthHuman(sp.name),sp.start,sp.end,r.empNo,r.name,r.pay,r.a,r.h,r.u,r.l,r.o,r.p,+r.ot.toFixed(2),r.miss])
+    sumRows.push([monthHuman(sp.name),sp.start,sp.end,r.empNo,r.name,r.pay,r.a,r.h,r.u,r.la||0,r.l-(r.la||0),r.o,r.p,+r.ot.toFixed(2),r.miss])
   ));
 
   /* clear existing data */
@@ -4571,8 +4571,8 @@ exportAllExcel=async function(){
   flushPending();const dates=Object.keys(db.days).filter(d=>RX_DATE.test(d)).sort();
   let html='<html><head><meta charset="UTF-8"></head><body><h2>Garden Grow Attendance</h2><h3>Daily Attendance</h3><table border="1"><tr><th>Date</th><th>Salary Period</th><th>Employee No</th><th>Employee Name</th><th>Status</th><th>In</th><th>Out</th><th>OT</th><th>Day Value</th><th>Note</th></tr>';
   dates.forEach(d=>{const sp=salaryPeriod(d);Object.keys(db.days[d]||{}).sort().forEach(no=>{const r=db.days[d][no];if(r)html+=`<tr><td>${d}</td><td>${xlsEsc(monthHuman(sp.name))}</td><td>${xlsEsc(no)}</td><td>${xlsEsc(empNameOf(no))}</td><td>${xlsEsc(statusLabel(r.status))}</td><td>${xlsEsc(r.in||'')}</td><td>${xlsEsc(r.out||'')}</td><td>${+r.ot||0}</td><td>${+r.dayVal||0}</td><td>${xlsEsc(r.note||'')}</td></tr>`;});});
-  html+='</table><h3>Salary Period Summary (15th → 14th) — Payroll Days = 30 − Absent − ½ Half − Unpaid leave</h3><table border="1"><tr><th>Salary Period</th><th>From</th><th>To</th><th>Employee No</th><th>Employee Name</th><th>Payroll Days</th><th>Absent</th><th>Half</th><th>Unpaid Leave</th><th>Paid Leave</th><th>Day Off</th><th>Present</th><th>OT Hours</th><th>Not Marked</th></tr>';
-  allSalaryPeriods().forEach(sp=>salarySummary(sp).forEach(r=>html+=`<tr><td>${xlsEsc(monthHuman(sp.name))}</td><td>${sp.start}</td><td>${sp.end}</td><td>${xlsEsc(r.empNo)}</td><td>${xlsEsc(r.name)}</td><td>${r.pay}</td><td>${r.a}</td><td>${r.h}</td><td>${r.u}</td><td>${r.l}</td><td>${r.o}</td><td>${r.p}</td><td>${r.ot.toFixed(2)}</td><td>${r.miss}</td></tr>`));
+  html+='</table><h3>Salary Period Summary (15th → 14th) — Payroll Days = 30 − Absent − ½ Half − Unpaid leave − Annual leave</h3><table border="1"><tr><th>Salary Period</th><th>From</th><th>To</th><th>Employee No</th><th>Employee Name</th><th>Payroll Days</th><th>Absent</th><th>Half</th><th>Unpaid Leave</th><th>Annual Leave</th><th>Sick Leave</th><th>Day Off</th><th>Present</th><th>OT Hours</th><th>Not Marked</th></tr>';
+  allSalaryPeriods().forEach(sp=>salarySummary(sp).forEach(r=>html+=`<tr><td>${xlsEsc(monthHuman(sp.name))}</td><td>${sp.start}</td><td>${sp.end}</td><td>${xlsEsc(r.empNo)}</td><td>${xlsEsc(r.name)}</td><td>${r.pay}</td><td>${r.a}</td><td>${r.h}</td><td>${r.u}</td><td>${r.la||0}</td><td>${r.l-(r.la||0)}</td><td>${r.o}</td><td>${r.p}</td><td>${r.ot.toFixed(2)}</td><td>${r.miss}</td></tr>`));
   html+='</table><h3>Leave</h3><table border="1"><tr><th>Employee No</th><th>Employee Name</th><th>Type</th><th>Start</th><th>End</th><th>Working Days</th><th>Note</th></tr>';
   (db.leaves||[]).slice().sort((a,b)=>a.start<b.start?-1:1).forEach(l=>{html+=`<tr><td>${xlsEsc(l.empNo)}</td><td>${xlsEsc(empNameOf(l.empNo))}</td><td>${xlsEsc(LV_TYPES[lvType(l)].full)}</td><td>${l.start}</td><td>${l.end}</td><td>${l.days}</td><td>${xlsEsc(l.note||'')}</td></tr>`;});
   html+='</table></body></html>';
@@ -4583,7 +4583,7 @@ function payrollExportPeriod(){const sp=salaryPeriod(_qsAnchor||key());return {s
 exportPayrollCSV=function(){
   flushPending();
   const {sp,rows}=payrollExportPeriod();
-  let html=`<div style="font-size:11px;color:var(--muted);margin-bottom:4px">Salary period: <strong>${escHTML(monthHuman(sp.name))}</strong> · ${dayMon(sp.start)} – ${dayMon(sp.end)} · Payroll Days = 30 − Absent − ½ Half − Unpaid</div>`;
+  let html=`<div style="font-size:11px;color:var(--muted);margin-bottom:4px">Salary period: <strong>${escHTML(monthHuman(sp.name))}</strong> · ${dayMon(sp.start)} – ${dayMon(sp.end)} · Payroll Days = 30 − Absent − ½ Half − Unpaid leave − Annual leave</div>`;
   html+=`<div style="overflow:auto"><table class="previewTable"><thead><tr><th>Employee</th><th>Payroll Days</th><th>Absent</th><th>Half</th><th>Unpaid</th><th>OT hrs</th><th>Not marked</th></tr></thead><tbody>`;
   rows.forEach(r=>{html+=`<tr><td>${escHTML(short(r.name))}</td><td>${r.pay}</td><td>${r.a}</td><td>${r.h}</td><td>${r.u}</td><td>${r.ot.toFixed(1)}</td><td>${r.miss||''}</td></tr>`});
   html+=`</tbody></table></div>`;
@@ -4593,8 +4593,8 @@ exportPayrollCSV=function(){
 confirmExportPayroll=async function(){
   document.getElementById('payrollPreviewModal').classList.remove('show');
   const {sp,rows}=payrollExportPeriod();
-  const csv=[['Salary Period','From','To','Employee No','Employee Name','Payroll Days','Absent','Half Day','Unpaid Leave','Paid Leave','Day Off','Present','OT Hours','Not Marked'],
-    ...rows.map(r=>[monthHuman(sp.name),sp.start,sp.end,r.empNo,r.name,r.pay,r.a,r.h,r.u,r.l,r.o,r.p,r.ot.toFixed(2),r.miss])]
+  const csv=[['Salary Period','From','To','Employee No','Employee Name','Payroll Days','Absent','Half Day','Unpaid Leave','Annual Leave','Sick Leave','Day Off','Present','OT Hours','Not Marked'],
+    ...rows.map(r=>[monthHuman(sp.name),sp.start,sp.end,r.empNo,r.name,r.pay,r.a,r.h,r.u,r.la||0,r.l-(r.la||0),r.o,r.p,r.ot.toFixed(2),r.miss])]
     .map(r=>r.map(csvEsc).join(',')).join('\n');
   localStorage.setItem(LAST_EXPORT_KEY,today());
   await shareFile(`GardenGrow_Payroll_${sp.start}_to_${sp.end}.csv`,csv,'text/csv');
