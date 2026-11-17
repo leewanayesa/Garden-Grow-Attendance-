@@ -5751,7 +5751,7 @@ function v73MaybeMorning(){
 }
 function v73MorningSeen(){try{localStorage.setItem(V73_MORNING,today());}catch(e){}}
 function v73Morning(){
-  const k=key();_v73={mode:'am',sel:new Set()};v73MorningDraw();
+  v73MorningSeen();_v73={mode:'am',sel:new Set()};v73MorningDraw();
 }
 function v73MorningDraw(){
   const k=key(),list=v73Working(k),n=_v73.sel.size;
@@ -5773,7 +5773,7 @@ function v73AmApply(t){const nos=[..._v73.sel];v73MorningSeen();qkCloseSheet();
 /* ══ EVENING: finish the day ══ */
 qvDayDoneAsk=async function(){
   if(futureBlock())return;const k=key();
-  if(typeof syncOn==='function'&&syncOn()&&navigator.onLine){await pullFirst();}
+  if(typeof syncOn==='function'&&syncOn()&&navigator.onLine){if(!(_syncState.phase==='ok'&&Date.now()-(_syncState.last||0)<120000))showShareNotice('⏳ Getting the newest marks…');await pullFirst();}
   if(key()!==k)return;
   const d=db.days[k]||{},w=v73Working(k),g={};
   w.forEach(e=>{const r=d[e.no]||defaultRecFor(e.no,k);if(+r.ot)(g[+r.ot]=g[+r.ot]||[]).push(e.no);});
@@ -5805,10 +5805,12 @@ function v73PickDraw(){
     <button class="v73link" onclick="${_v73.groups.length?'v73Summary()':'v73Ask()'}">‹ Back</button>`);
 }
 function v73Other(){const v=prompt('Finish time (e.g. 9:15) or overtime hours (e.g. 4.5):','');if(v==null)return;
-  let h=null;const m=String(v).trim().match(/^(\d{1,2})[:.](\d{2})$/);
-  if(m){const[a,b]=v73Out().split(':').map(Number);let mins=(+m[1])*60+(+m[2])-(a*60+b);if(mins<=0&&+m[1]<12)mins+=12*60;h=Math.round(mins/30)/2;}
-  else h=Math.round((parseFloat(v)||0)*2)/2;
-  if(!(h>0)){showShareNotice('⚠ Not understood — type a time like 9:15 or hours like 4.5');return;}
+  let h=null,raw=null;const t=String(v).trim().replace(',','.');const m=t.match(/^(\d{1,2}):(\d{2})$/);
+  if(m){const[a,b]=v73Out().split(':').map(Number);let mins=(+m[1])*60+(+m[2])-(a*60+b);if(mins<=0&&+m[1]<12)mins+=12*60;raw=mins/60;}
+  else if(/^\d+(\.\d+)?$/.test(t))raw=parseFloat(t);
+  if(raw!=null)h=Math.round(raw*2)/2;
+  if(!(h>0)){showShareNotice('⚠ Not understood — type a finish time like 9:15 or hours like 4.5');return;}
+  if(Math.abs(h-raw)>0.001)showShareNotice('Overtime is counted in half hours: '+qkFmtH(Math.round(raw*100)/100)+' h → '+qkFmtH(h)+' h');
   if(typeof qvOtOk==='function'&&!qvOtOk(h))return;v73Pick(h);}
 function v73AddGroup(){const nos=[..._v73.sel];if(!nos.length||!_v73.h)return;
   const g=_v73.groups.find(x=>x.h===_v73.h);if(g)g.nos.push(...nos);else _v73.groups.push({h:_v73.h,nos});
@@ -5827,10 +5829,10 @@ function v73Finish(){
   if(!_v73)return;const k=_v73.k;if(key()!==k){qkCloseSheet();return;}
   const want={};_v73.groups.forEach(x=>x.nos.forEach(no=>want[no]=x.h));
   let ch=0;v73Working(k).forEach(e=>{const r=qkRec(e.no),v=want[e.no]||0;if((+r.ot||0)!==v){qkWrite(e.no,{ot:v});ch++;}});
-  if(ch)qkCommit('');
   qkCloseSheet();
-  qvDayDone(false);
-  const msg=_v73.groups.length?_v73.groups.reduce((s,x)=>s+x.nos.length,0)+' with overtime':'no overtime';_v73=null;
+  qvDayDone(false);   /* saves once: overtime + finishing are one Undo step */
+  var msg=_v73.groups.length?_v73.groups.reduce((s,x)=>s+x.nos.length,0)+' with overtime':'no overtime';_v73=null;
+  if(k!==today()){_v73=null;showShareNotice('✓ '+dDay(k)+' finished · '+msg);return;}
   setTimeout(()=>{if(key()!==k||_qkSheet)return;
     qkSheet(`<div class="v73q">${gi('check')} ${escHTML(dDay(k))} finished</div><div class="v73sub">Saved · ${escHTML(msg)}</div>
       <div class="v73row"><button class="v73b v73w" onclick="qkCloseSheet();shareWhatsApp()">${gi('share')}WhatsApp</button><button class="v73b v73g" onclick="qkCloseSheet()">Close</button></div>`);},450);
