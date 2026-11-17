@@ -5559,6 +5559,7 @@ function qvLeaveDay(no,t){
     const c=leaveClash(no,s,e,edit);if(c){showShareNotice('⚠ Clashes with leave '+dShort(c.start)+' – '+dShort(c.end));renderCards();return;}
     const r=saveLeaveCore({emp:no,s,e,type:t,note:edit?edit.note||'':'',edit},false);
     materializeLeaveDays(no,k,k,r.rec.note||'',t,r.rec.id,true);                    /* today's own mark becomes the leave */
+    try{_collectWas(r.rec);}catch(e){}                                              /* remember the mark it replaced (e.g. Absent) on the leave itself */
     lv=r.rec;
   }
   qkCommit(first+' → '+QV_LV[t].replace(/^\S+ /,'')+(lv.start!==lv.end?' ('+dShort(lv.start)+' – '+dShort(lv.end)+')':'')+' ✓');
