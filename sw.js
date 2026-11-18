@@ -1,4 +1,4 @@
-/* Garden Grow Attendance — Service Worker (v77)
+/* Garden Grow Attendance — Service Worker (v78)
    Upload as sw.js in the SAME GitHub repo/folder as index.html.
    • Network-first: always loads the newest app when online, falls back to the
      saved copy offline.
@@ -6,7 +6,7 @@
    • Never touches attendance data (localStorage / IndexedDB) and never caches
      the Google Sheet sync calls.
 */
-const CACHE = 'gg-attendance-v77';
+const CACHE = 'gg-attendance-v78';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 /* v57: each file fetched fresh from GitHub (not the browser's own cache) and stored one by one —
@@ -38,6 +38,17 @@ self.addEventListener('fetch', e => {
      above all the Google Sheet sync calls — goes straight to the network. */
   const isFont = /^fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
   if (url.origin !== self.location.origin && !isFont) return;
+  /* v78: the app page opens at once from the phone's saved copy; the newest copy is fetched in the
+     background and saved for next time (the app itself reloads when a newer version is found) */
+  const isPage = req.mode === 'navigate' || (url.origin === self.location.origin && /\/(index\.html)?$/.test(url.pathname) && !url.search);
+  if (isPage && !url.search.includes('vc=')) {
+    e.respondWith(caches.open(CACHE).then(ca => ca.match('./index.html').then(hit => {
+      const net = fetch(req).then(r => { if (r.ok) ca.put('./index.html', r.clone()).catch(() => {}); return r; });
+      if (hit) { e.waitUntil(net.catch(() => {})); return hit; }
+      return net.catch(() => caches.match('./index.html').then(x => x || caches.match('./')));
+    })));
+    return;
+  }
   e.respondWith(
     fetch(req)
       .then(r => {
